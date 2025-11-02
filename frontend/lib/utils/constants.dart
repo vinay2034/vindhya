@@ -1,7 +1,8 @@
 // API Configuration
 class ApiConfig {
   // Base URL - Change this to your backend URL
-  static const String baseUrl = 'http://localhost:5000/api';
+  // For physical device, use your computer's local IP
+  static const String baseUrl = 'http://10.189.55.228:5000/api';
   
   // API Endpoints
   static const String login = '/auth/login';
