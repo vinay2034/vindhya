@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
+import 'student_attendance_screen.dart';
 
 class TeacherDashboard extends StatelessWidget {
   const TeacherDashboard({super.key});
@@ -121,7 +122,14 @@ class TeacherDashboard extends StatelessWidget {
             'Take Attendance',
             'Mark today\'s attendance',
             Icons.check_circle_outline,
-            () {},
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StudentAttendanceScreen(),
+                ),
+              );
+            },
           ),
           
           _buildActionCard(

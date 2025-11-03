@@ -184,9 +184,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     
                     const SizedBox(height: 24),
                     
-                    // Email Address Label
+                    // Email/Mobile Label (dynamic based on role)
                     Text(
-                      'Email Address',
+                      _selectedRole == 'Parent' ? 'Mobile Number' : 'Email Address',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],
@@ -196,14 +196,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     
                     const SizedBox(height: 8),
                     
-                    // Email Field
+                    // Email/Mobile Field
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType: _selectedRole == 'Parent' 
+                          ? TextInputType.phone 
+                          : TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        hintText: AppStrings.emailHint,
+                        hintText: _selectedRole == 'Parent' 
+                            ? 'Enter 10-digit mobile number'
+                            : AppStrings.emailHint,
                         hintStyle: TextStyle(color: Colors.grey[400]),
-                        prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+                        prefixIcon: Icon(
+                          _selectedRole == 'Parent' 
+                              ? Icons.phone_outlined 
+                              : Icons.email_outlined, 
+                          color: Colors.grey[400]
+                        ),
                         filled: true,
                         fillColor: Colors.grey[50],
                         border: OutlineInputBorder(
@@ -224,7 +233,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
-                      validator: Validators.validateEmail,
+                      validator: _selectedRole == 'Parent' 
+                          ? (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Mobile number is required';
+                              }
+                              if (value.length != 10 || !RegExp(r'^\d{10}$').hasMatch(value)) {
+                                return 'Enter valid 10-digit mobile number';
+                              }
+                              return null;
+                            }
+                          : Validators.validateEmail,
                       enabled: !_isLoading,
                     ),
                     

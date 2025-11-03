@@ -8,7 +8,13 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
+    // Relaxed email validation to allow temporary emails like mobile@parent.temp
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email']
+  },
+  username: {
+    type: String,
+    sparse: true, // Allows null/undefined values to be non-unique
+    trim: true
   },
   password: {
     type: String,
@@ -46,7 +52,7 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
       type: String,
-      enum: ['male', 'female', 'other'],
+      enum: ['male', 'female', 'other', null],
       default: null
     }
   },

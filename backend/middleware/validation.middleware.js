@@ -21,9 +21,15 @@ const handleValidationErrors = (req, res, next) => {
 // Login validation
 const loginValidation = [
   body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail(),
+    .custom((value) => {
+      // Allow either email format or 10-digit mobile number (for parent login)
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      const isMobile = /^\d{10}$/.test(value);
+      if (!isEmail && !isMobile) {
+        throw new Error('Please provide a valid email or mobile number');
+      }
+      return true;
+    }),
   body('password')
     .notEmpty()
     .withMessage('Password is required')
@@ -73,8 +79,7 @@ const studentValidation = [
     .withMessage('Admission number is required')
     .trim(),
   body('parentId')
-    .notEmpty()
-    .withMessage('Parent reference is required')
+    .optional()
     .isMongoId()
     .withMessage('Invalid parent ID'),
   body('classId')

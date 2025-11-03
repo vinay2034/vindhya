@@ -7,6 +7,7 @@ const {
   studentValidation, 
   classValidation 
 } = require('../middleware/validation.middleware');
+const upload = require('../middleware/upload.middleware');
 
 // Apply authentication and admin authorization to all routes
 router.use(verifyToken, authorize('admin'));
@@ -32,6 +33,9 @@ router.route('/students/:id')
   .put(adminController.updateStudent)
   .delete(adminController.deleteStudent);
 
+// Student photo upload
+router.post('/students/:id/photo', upload.single('photo'), adminController.uploadStudentPhoto);
+
 // Class Management
 router.route('/classes')
   .get(adminController.getClasses)
@@ -49,6 +53,24 @@ router.route('/subjects')
 router.route('/subjects/:id')
   .put(adminController.updateSubject)
   .delete(adminController.deleteSubject);
+
+// Fee Management
+router.route('/fees')
+  .get(adminController.getFees)
+  .post(adminController.createFee);
+
+router.route('/fees/:id')
+  .put(adminController.updateFee)
+  .delete(adminController.deleteFee);
+
+// Timetable Management
+router.route('/timetable')
+  .get(adminController.getTimetable)
+  .post(adminController.createTimetable);
+
+router.route('/timetable/:id')
+  .put(adminController.updateTimetable)
+  .delete(adminController.deleteTimetable);
 
 // Reports
 router.get('/reports/attendance', adminController.getAttendanceReport);

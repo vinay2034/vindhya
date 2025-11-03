@@ -87,41 +87,60 @@ class AdminDashboard extends StatelessWidget {
             'Manage Classes',
             'Create and manage classes',
             Icons.class_,
-            () {},
+            () {
+              Navigator.pushNamed(context, '/manage-classes');
+            },
           ),
           
           _buildMenuCard(
             'Manage Subjects',
             'Add and organize subjects',
             Icons.book,
-            () {},
+            () {
+              Navigator.pushNamed(context, '/manage-subjects');
+            },
           ),
           
           _buildMenuCard(
-            'Manage Teachers',
-            'Add and assign teachers',
-            Icons.person,
-            () {},
+            'Timetable Management',
+            'Create and manage class schedules',
+            Icons.schedule,
+            () {
+              Navigator.pushNamed(context, '/manage-timetable');
+            },
+          ),
+          
+          _buildMenuCard(
+            'Teacher Assignments',
+            'Assign classes and subjects to teachers',
+            Icons.assignment_ind,
+            () {
+              Navigator.pushNamed(context, '/teacher-assignments');
+            },
+          ),
+          
+          _buildMenuCard(
+            'Fees Management',
+            'Track fees and payments',
+            Icons.payments,
+            () {
+              Navigator.pushNamed(context, '/fees-management');
+            },
           ),
           
           _buildMenuCard(
             'Manage Students',
             'Student enrollment and details',
             Icons.people,
-            () {},
+            () {
+              Navigator.pushNamed(context, '/manage-students');
+            },
           ),
           
           _buildMenuCard(
             'Attendance Reports',
             'View attendance statistics',
             Icons.analytics,
-            () {},
-          ),
-          
-          _buildMenuCard(
-            'Fee Reports',
-            'Track fee collection',
-            Icons.attach_money,
             () {},
           ),
         ],

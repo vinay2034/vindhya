@@ -60,13 +60,18 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find user with password
-    const user = await User.findOne({ email }).select('+password');
+    // Find user with password - try email first, then username (for parents with mobile login)
+    let user = await User.findOne({ email }).select('+password');
+    
+    // If not found by email and the email looks like a mobile number, try username
+    if (!user && /^\d{10}$/.test(email)) {
+      user = await User.findOne({ username: email }).select('+password');
+    }
     
     if (!user) {
       return res.status(401).json({
         status: 'error',
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
     

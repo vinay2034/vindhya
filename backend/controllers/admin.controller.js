@@ -480,6 +480,267 @@ const deleteSubject = async (req, res) => {
   }
 };
 
+// FEE MANAGEMENT
+// @desc    Get all fees
+// @route   GET /api/admin/fees
+// @access  Private/Admin
+const getFees = async (req, res) => {
+  try {
+    const { studentId, status, academicYear, feeType } = req.query;
+    
+    const query = {};
+    if (studentId) query.studentId = studentId;
+    if (status) query.status = status;
+    if (academicYear) query.academicYear = academicYear;
+    if (feeType) query.feeType = feeType;
+    
+    const fees = await Fee.find(query)
+      .populate('studentId', 'name rollNumber')
+      .populate('createdBy', 'profile.name email')
+      .sort({ dueDate: -1 });
+    
+    // Calculate summary
+    const summary = await Fee.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$status',
+          totalAmount: { $sum: '$amount' },
+          paidAmount: { $sum: '$paidAmount' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        fees,
+        summary
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch fees',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Create fee record
+// @route   POST /api/admin/fees
+// @access  Private/Admin
+const createFee = async (req, res) => {
+  try {
+    const fee = await Fee.create({
+      ...req.body,
+      createdBy: req.user._id
+    });
+    
+    const populatedFee = await Fee.findById(fee._id)
+      .populate('studentId', 'name rollNumber')
+      .populate('createdBy', 'profile.name email');
+    
+    res.status(201).json({
+      status: 'success',
+      message: 'Fee record created successfully',
+      data: { fee: populatedFee }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create fee record',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Update fee record
+// @route   PUT /api/admin/fees/:id
+// @access  Private/Admin
+const updateFee = async (req, res) => {
+  try {
+    const fee = await Fee.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,
+        updatedBy: req.user._id,
+        updatedAt: Date.now()
+      },
+      { new: true, runValidators: true }
+    )
+      .populate('studentId', 'name rollNumber')
+      .populate('createdBy', 'profile.name email');
+    
+    if (!fee) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Fee record not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Fee record updated successfully',
+      data: { fee }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update fee record',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Delete fee record
+// @route   DELETE /api/admin/fees/:id
+// @access  Private/Admin
+const deleteFee = async (req, res) => {
+  try {
+    const fee = await Fee.findByIdAndDelete(req.params.id);
+    
+    if (!fee) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Fee record not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Fee record deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to delete fee record',
+      error: error.message
+    });
+  }
+};
+
+// TIMETABLE MANAGEMENT
+// @desc    Get timetable entries
+// @route   GET /api/admin/timetable
+// @access  Private/Admin
+const getTimetable = async (req, res) => {
+  try {
+    const { classId, teacherId, dayOfWeek, academicYear } = req.query;
+    
+    const query = { isActive: true };
+    if (classId) query.classId = classId;
+    if (teacherId) query.teacherId = teacherId;
+    if (dayOfWeek) query.dayOfWeek = dayOfWeek;
+    if (academicYear) query.academicYear = academicYear;
+    
+    const timetable = await Timetable.find(query)
+      .populate('classId', 'className section')
+      .populate('subjectId', 'name code')
+      .populate('teacherId', 'profile.name email')
+      .sort({ dayOfWeek: 1, startTime: 1 });
+    
+    res.status(200).json({
+      status: 'success',
+      data: { timetable }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch timetable',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Create timetable entry
+// @route   POST /api/admin/timetable
+// @access  Private/Admin
+const createTimetable = async (req, res) => {
+  try {
+    const timetableEntry = await Timetable.create(req.body);
+    const populatedEntry = await Timetable.findById(timetableEntry._id)
+      .populate('classId', 'className section')
+      .populate('subjectId', 'name code')
+      .populate('teacherId', 'profile.name email');
+    
+    res.status(201).json({
+      status: 'success',
+      message: 'Timetable entry created successfully',
+      data: { timetable: populatedEntry }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create timetable entry',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Update timetable entry
+// @route   PUT /api/admin/timetable/:id
+// @access  Private/Admin
+const updateTimetable = async (req, res) => {
+  try {
+    const timetableEntry = await Timetable.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, updatedAt: Date.now() },
+      { new: true, runValidators: true }
+    )
+      .populate('classId', 'className section')
+      .populate('subjectId', 'name code')
+      .populate('teacherId', 'profile.name email');
+    
+    if (!timetableEntry) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Timetable entry not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Timetable entry updated successfully',
+      data: { timetable: timetableEntry }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update timetable entry',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Delete timetable entry
+// @route   DELETE /api/admin/timetable/:id
+// @access  Private/Admin
+const deleteTimetable = async (req, res) => {
+  try {
+    const timetableEntry = await Timetable.findByIdAndDelete(req.params.id);
+    
+    if (!timetableEntry) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Timetable entry not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Timetable entry deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to delete timetable entry',
+      error: error.message
+    });
+  }
+};
+
 // REPORTS
 // @desc    Get attendance report
 // @route   GET /api/admin/reports/attendance
@@ -557,6 +818,57 @@ const getFeeReport = async (req, res) => {
   }
 };
 
+// @desc    Upload student photo
+// @route   POST /api/admin/students/:id/photo
+// @access  Private/Admin
+const uploadStudentPhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No photo file provided'
+      });
+    }
+
+    const student = await Student.findById(req.params.id);
+    
+    if (!student) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Student not found'
+      });
+    }
+
+    // Delete old photo if exists
+    if (student.avatar) {
+      const oldPhotoPath = student.avatar.replace('/uploads/', 'uploads/');
+      const fs = require('fs');
+      if (fs.existsSync(oldPhotoPath)) {
+        fs.unlinkSync(oldPhotoPath);
+      }
+    }
+
+    // Update student with new photo path
+    student.avatar = `/uploads/students/${req.file.filename}`;
+    await student.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Photo uploaded successfully',
+      data: { 
+        student,
+        photoUrl: student.avatar
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to upload photo',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getDashboard,
   getUsers,
@@ -575,6 +887,15 @@ module.exports = {
   createSubject,
   updateSubject,
   deleteSubject,
+  getFees,
+  createFee,
+  updateFee,
+  deleteFee,
+  getTimetable,
+  createTimetable,
+  updateTimetable,
+  deleteTimetable,
   getAttendanceReport,
-  getFeeReport
+  getFeeReport,
+  uploadStudentPhoto
 };

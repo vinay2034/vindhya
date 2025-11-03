@@ -2,7 +2,7 @@
 class ApiConfig {
   // Base URL - Change this to your backend URL
   // For physical device, use your computer's local IP
-  static const String baseUrl = 'http://192.168.31.75:5000/api';
+  static const String baseUrl = 'http://10.189.55.228:5000/api';
   
   // API Endpoints
   static const String login = '/auth/login';
@@ -17,6 +17,8 @@ class ApiConfig {
   static const String students = '/admin/students';
   static const String classes = '/admin/classes';
   static const String subjects = '/admin/subjects';
+  static const String fees = '/admin/fees';
+  static const String timetable = '/admin/timetable';
   static const String attendanceReport = '/admin/reports/attendance';
   static const String feeReport = '/admin/reports/fees';
   

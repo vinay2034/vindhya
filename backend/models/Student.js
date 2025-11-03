@@ -15,7 +15,7 @@ const studentSchema = new mongoose.Schema({
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Parent reference is required']
+    default: null
   },
   classId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -44,8 +44,8 @@ const studentSchema = new mongoose.Schema({
   },
   bloodGroup: {
     type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-    default: null
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
+    default: ''
   },
   address: {
     type: String,
@@ -58,7 +58,9 @@ const studentSchema = new mongoose.Schema({
   emergencyContact: {
     name: String,
     phone: String,
-    relation: String
+    relation: String,
+    fatherName: String,
+    motherName: String
   },
   medicalInfo: {
     allergies: [String],
