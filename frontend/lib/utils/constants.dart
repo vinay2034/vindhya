@@ -2,7 +2,7 @@
 class ApiConfig {
   // Base URL - Change this to your backend URL
   // For physical device, use your computer's local IP
-  static const String baseUrl = 'http://10.189.55.228:5000/api';
+  static const String baseUrl = 'http://192.168.31.75:5000/api';
   
   // API Endpoints
   static const String login = '/auth/login';
@@ -156,7 +156,7 @@ enum FeeStatus {
 
 // App Colors
 class AppColors {
-  static const primary = 0xFF6B4EFF;
+  static const primary = 0xFFBA78FC;
   static const secondary = 0xFF00D4AA;
   static const success = 0xFF28A745;
   static const danger = 0xFFDC3545;
@@ -170,7 +170,7 @@ class AppColors {
 class AppStrings {
   static const String appName = 'School Management';
   static const String loginTitle = 'Welcome Back';
-  static const String loginSubtitle = 'Login to the School Portal';
+  static const String loginSubtitle = 'Sign in to your account';
   static const String emailHint = 'Enter your email';
   static const String passwordHint = 'Enter your password';
   static const String loginButton = 'Login';
