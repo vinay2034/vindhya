@@ -1,8 +1,10 @@
 // API Configuration
 class ApiConfig {
-  // Base URL - Change this to your backend URL
-  // For physical device, use your computer's local IP
-  static const String baseUrl = 'http://10.189.55.228:5000/api';
+  // Base URL - Production API on Render
+  static const String baseUrl = 'https://vindhya-niketan.onrender.com/api';
+  
+  // Local development (uncomment when testing locally)
+  // static const String baseUrl = 'http://10.189.55.228:5000/api';
   
   // API Endpoints
   static const String login = '/auth/login';
