@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../dependency_injection.dart';
+import 'package:intl/intl.dart';
 
 class ManageTimetableScreen extends StatefulWidget {
   const ManageTimetableScreen({Key? key}) : super(key: key);
@@ -9,10 +10,8 @@ class ManageTimetableScreen extends StatefulWidget {
   State<ManageTimetableScreen> createState() => _ManageTimetableScreenState();
 }
 
-class _ManageTimetableScreenState extends State<ManageTimetableScreen>
-    with SingleTickerProviderStateMixin {
+class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
   final ApiService _apiService = getIt<ApiService>();
-  late TabController _tabController;
 
   List<dynamic> _classes = [];
   List<dynamic> _subjects = [];
@@ -20,29 +19,30 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
   List<dynamic> _timetable = [];
   
   String? _selectedClassId;
-  String? _selectedTeacherId;
-  String _selectedAcademicYear = '2024-2025';
+  String _selectedGrade = 'Grade 10';
+  String _selectedView = 'Day View';
+  String _selectedDay = 'Tue';
   
   bool _isLoading = true;
-  String _viewMode = 'class'; // 'class' or 'teacher'
 
-  final List<String> _days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday'
+  final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  final List<String> _grades = [
+    'Grade 10',
+    'Grade 9',
+    'Grade 8',
+    'Grade 7',
+    'Grade 6',
   ];
 
-  final List<Map<String, String>> _timeSlots = [
-    {'start': '08:00', 'end': '08:45'},
-    {'start': '08:45', 'end': '09:30'},
-    {'start': '09:30', 'end': '10:15'},
-    {'start': '10:30', 'end': '11:15'},
-    {'start': '11:15', 'end': '12:00'},
-    {'start': '12:00', 'end': '12:45'},
-    {'start': '13:30', 'end': '14:15'},
-    {'start': '14:15', 'end': '15:00'},
+  final List<String> _viewModes = ['Day View', 'Week View'];
+
+  // Time slots from design
+  final List<Map<String, dynamic>> _timeSlots = [
+    {'time': '09:00', 'label': '09:00'},
+    {'time': '10:00', 'label': '10:00'},
+    {'time': '11:00', 'label': '11:00'},
+    {'time': '12:00', 'label': '12:00'},
   ];
 
   @override

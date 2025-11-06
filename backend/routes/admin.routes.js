@@ -30,6 +30,7 @@ router.route('/students')
   .post(studentValidation, adminController.createStudent);
 
 router.route('/students/:id')
+  .get(adminController.getStudent)
   .put(adminController.updateStudent)
   .delete(adminController.deleteStudent);
 

@@ -154,13 +154,9 @@ const getProfile = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { profile } = req.body;
+    const { name, phone, address, dateOfBirth, gender } = req.body;
     
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { profile },
-      { new: true, runValidators: true }
-    );
+    const user = await User.findById(req.user.id);
     
     if (!user) {
       return res.status(404).json({
@@ -168,6 +164,15 @@ const updateProfile = async (req, res) => {
         message: 'User not found'
       });
     }
+
+    // Update profile fields
+    if (name) user.profile.name = name;
+    if (phone) user.profile.phone = phone;
+    if (address) user.profile.address = address;
+    if (dateOfBirth) user.profile.dateOfBirth = dateOfBirth;
+    if (gender !== undefined) user.profile.gender = gender;
+
+    await user.save();
     
     res.status(200).json({
       status: 'success',
@@ -179,6 +184,50 @@ const updateProfile = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to update profile',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Upload profile avatar
+// @route   POST /api/auth/upload-avatar
+// @access  Private
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please upload an image file'
+      });
+    }
+
+    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    user.profile.avatar = avatarUrl;
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Avatar uploaded successfully',
+      data: { 
+        avatar: avatarUrl,
+        user 
+      }
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to upload avatar',
       error: error.message
     });
   }
@@ -209,5 +258,6 @@ module.exports = {
   login,
   getProfile,
   updateProfile,
+  uploadAvatar,
   logout
 };

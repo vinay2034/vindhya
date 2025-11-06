@@ -56,6 +56,19 @@ const userSchema = new mongoose.Schema({
       default: null
     }
   },
+  // Teacher-specific fields
+  employeeId: {
+    type: String,
+    sparse: true
+  },
+  assignedClasses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class'
+  }],
+  subjectsTaught: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject'
+  }],
   isActive: {
     type: Boolean,
     default: true

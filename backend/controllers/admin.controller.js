@@ -193,6 +193,35 @@ const getStudents = async (req, res) => {
   }
 };
 
+// @desc    Get single student by ID
+// @route   GET /api/admin/students/:id
+// @access  Private/Admin
+const getStudent = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id)
+      .populate('parentId', 'email profile')
+      .populate('classId', 'className section grade');
+    
+    if (!student) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Student not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: student
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch student',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Create new student
 // @route   POST /api/admin/students
 // @access  Private/Admin
@@ -876,6 +905,7 @@ module.exports = {
   updateUser,
   deleteUser,
   getStudents,
+  getStudent,
   createStudent,
   updateStudent,
   deleteStudent,

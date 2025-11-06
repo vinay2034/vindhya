@@ -70,12 +70,43 @@ const getClasses = async (req, res) => {
     
     res.status(200).json({
       status: 'success',
-      data: { classes }
+      data: classes
     });
   } catch (error) {
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch classes',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get teacher's subjects
+// @route   GET /api/teacher/subjects
+// @access  Private/Teacher
+const getSubjects = async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const User = require('../models/User');
+    const Subject = require('../models/Subject');
+    
+    const teacher = await User.findById(teacherId).populate('subjectsTaught', 'name code');
+    
+    if (!teacher || !teacher.subjectsTaught) {
+      return res.status(200).json({
+        status: 'success',
+        data: []
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: teacher.subjectsTaught
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch subjects',
       error: error.message
     });
   }
@@ -293,10 +324,80 @@ const updateFeeStatus = async (req, res) => {
   }
 };
 
+// @desc    Get teacher assignments (classes and subjects)
+// @route   GET /api/teacher/assignments
+// @access  Private/Teacher
+const getAssignments = async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const User = require('../models/User');
+    const Subject = require('../models/Subject');
+    
+    // Get teacher user to access subjectsTaught and assignedClasses
+    const teacher = await User.findById(teacherId)
+      .populate('assignedClasses', 'name grade section')
+      .populate('subjectsTaught', 'name code');
+    
+    if (!teacher) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Teacher not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        classes: teacher.assignedClasses || [],
+        subjects: teacher.subjectsTaught || []
+      }
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch teacher assignments',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get student details
+// @route   GET /api/teacher/student/:id
+// @access  Private/Teacher
+const getStudentDetails = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id)
+      .populate('parentId', 'email profile')
+      .populate('classId', 'className section grade');
+    
+    if (!student) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Student not found'
+      });
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: student
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch student details',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getDashboard,
+  getAssignments,
   getClasses,
+  getSubjects,
   getStudentsByClass,
+  getStudentDetails,
   markAttendance,
   markBulkAttendance,
   getAttendance,

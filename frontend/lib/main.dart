@@ -7,7 +7,7 @@ import 'screens/admin/admin_dashboard.dart';
 import 'screens/admin/manage_classes_screen.dart';
 import 'screens/admin/manage_subjects_screen.dart';
 import 'screens/admin/manage_students_screen.dart';
-import 'screens/admin/manage_timetable_screen.dart';
+import 'screens/admin/timetable_overview_screen.dart';
 import 'screens/admin/teacher_assignments_screen.dart';
 import 'screens/admin/fees_management_screen.dart';
 import 'screens/teacher/teacher_dashboard.dart';
@@ -102,7 +102,7 @@ class MyApp extends StatelessWidget {
         '/manage-classes': (context) => const ManageClassesScreen(),
         '/manage-subjects': (context) => const ManageSubjectsScreen(),
         '/manage-students': (context) => const ManageStudentsScreen(),
-        '/manage-timetable': (context) => const ManageTimetableScreen(),
+        '/manage-timetable': (context) => const TimetableOverviewScreen(),
         '/teacher-assignments': (context) => const TeacherAssignmentsScreen(),
         '/fees-management': (context) => const FeesManagementScreen(),
       },

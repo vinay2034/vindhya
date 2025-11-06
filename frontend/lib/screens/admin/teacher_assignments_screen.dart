@@ -22,7 +22,7 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
   List<dynamic> _timetable = [];
 
   bool _isLoading = true;
-  String _filterStatus = 'all'; // all, assigned, unassigned
+  String _selectedDepartment = 'All'; // All, Science Dept., Arts Dept., Available
 
   @override
   void initState() {
@@ -69,19 +69,67 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
         final email = teacher['email']?.toLowerCase() ?? '';
         final matchesSearch = name.contains(query) || email.contains(query);
 
-        if (_filterStatus == 'all') return matchesSearch;
+        if (!matchesSearch) return false;
+
+        // Department filter
+        if (_selectedDepartment == 'All') return true;
 
         final assignments = _getTeacherAssignments(teacher['_id']);
         final hasAssignments = assignments['classes'].isNotEmpty ||
             assignments['subjects'].isNotEmpty;
 
-        if (_filterStatus == 'assigned') {
-          return matchesSearch && hasAssignments;
-        } else {
-          return matchesSearch && !hasAssignments;
+        if (_selectedDepartment == 'Available') {
+          return !hasAssignments || _getWorkloadPercentage(assignments) < 50;
         }
+
+        // Get teacher's department from subjects
+        final teacherDept = _getTeacherDepartment(assignments['subjects']);
+        return teacherDept == _selectedDepartment;
       }).toList();
     });
+  }
+
+  String _getTeacherDepartment(List subjects) {
+    if (subjects.isEmpty) return 'None';
+    
+    for (var subject in subjects) {
+      final subjectName = subject['subjectName']?.toLowerCase() ?? '';
+      if (subjectName.contains('science') ||
+          subjectName.contains('physics') ||
+          subjectName.contains('chemistry') ||
+          subjectName.contains('biology') ||
+          subjectName.contains('math')) {
+        return 'Science Dept.';
+      } else if (subjectName.contains('english') ||
+          subjectName.contains('history') ||
+          subjectName.contains('geography') ||
+          subjectName.contains('art') ||
+          subjectName.contains('music')) {
+        return 'Arts Dept.';
+      }
+    }
+    return 'Other';
+  }
+
+  int _getWorkloadPercentage(Map<String, dynamic> assignments) {
+    // Calculate workload based on classes and subjects
+    final classCount = assignments['classes'].length;
+    final subjectCount = assignments['subjects'].length;
+    
+    // Each class as class teacher = 30%, each subject = 20%
+    // Max realistic: 2 classes (60%) + 2 subjects (40%) = 100%
+    final classLoad = classCount * 30;
+    final subjectLoad = subjectCount * 20;
+    final totalLoad = classLoad + subjectLoad;
+    
+    return totalLoad > 100 ? 100 : totalLoad;
+  }
+
+  Color _getWorkloadColor(int percentage) {
+    if (percentage >= 80) return Colors.red;
+    if (percentage >= 60) return Colors.orange;
+    if (percentage >= 40) return const Color(0xFFBA78FC);
+    return Colors.green;
   }
 
   Map<String, dynamic> _getTeacherAssignments(String teacherId) {
@@ -262,9 +310,23 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Teacher Assignments'),
         backgroundColor: const Color(0xFFBA78FC),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              // Menu options
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -279,69 +341,66 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
           }
         },
         backgroundColor: const Color(0xFFBA78FC),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
+        elevation: 6,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFBA78FC)),
+            ))
           : Column(
               children: [
-                // Search and Filter Section
+                // Search Bar
                 Container(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.grey[100],
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name or email...',
-                          prefixIcon: const Icon(Icons.search),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search for a teacher',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFBA78FC),
+                          width: 2,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Text('Filter: '),
-                          const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('All Teachers'),
-                            selected: _filterStatus == 'all',
-                            onSelected: (selected) {
-                              setState(() => _filterStatus = 'all');
-                              _filterTeachers();
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('Assigned'),
-                            selected: _filterStatus == 'assigned',
-                            selectedColor: Colors.green[200],
-                            onSelected: (selected) {
-                              setState(() => _filterStatus = 'assigned');
-                              _filterTeachers();
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          ChoiceChip(
-                            label: const Text('Unassigned'),
-                            selected: _filterStatus == 'unassigned',
-                            selectedColor: Colors.orange[200],
-                            onSelected: (selected) {
-                              setState(() => _filterStatus = 'unassigned');
-                              _filterTeachers();
-                            },
-                          ),
-                        ],
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
                       ),
+                    ),
+                  ),
+                ),
+                // Department Filter Chips
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 50,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildFilterChip('All'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Science Dept.'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Arts Dept.'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Available'),
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
                 // Teachers List
                 Expanded(
                   child: _filteredTeachers.isEmpty
@@ -350,13 +409,14 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.person_off,
-                                  size: 64, color: Colors.grey[400]),
+                                  size: 64, color: Colors.grey[300]),
                               const SizedBox(height: 16),
                               Text(
                                 'No teachers found',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.grey[600],
+                                  color: Colors.grey[400],
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -378,108 +438,161 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
     );
   }
 
+  Widget _buildFilterChip(String label) {
+    final isSelected = _selectedDepartment == label;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedDepartment = label;
+          _filterTeachers();
+        });
+      },
+      backgroundColor: Colors.white,
+      selectedColor: const Color(0xFFBA78FC).withOpacity(0.2),
+      checkmarkColor: const Color(0xFFBA78FC),
+      labelStyle: TextStyle(
+        color: isSelected ? const Color(0xFFBA78FC) : Colors.grey[700],
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      ),
+      side: BorderSide(
+        color: isSelected ? const Color(0xFFBA78FC) : Colors.grey[300]!,
+        width: isSelected ? 2 : 1,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    );
+  }
+
   Widget _buildTeacherCard(
       Map<String, dynamic> teacher, Map<String, dynamic> assignments) {
     final classCount = assignments['classes'].length;
     final subjectCount = assignments['subjects'].length;
+    final workloadPercent = _getWorkloadPercentage(assignments);
+    final workloadColor = _getWorkloadColor(workloadPercent);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: const Color(0xFFBA78FC),
-              child: Text(
-                teacher['profile']?['name']?.substring(0, 1).toUpperCase() ??
-                    'T',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Teacher Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => _showAssignmentDialog(teacher),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    teacher['profile']?['name'] ?? teacher['email'],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  // Avatar
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFBA78FC),
+                          const Color(0xFFBA78FC).withOpacity(0.7),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        teacher['profile']?['name']
+                                ?.substring(0, 1)
+                                .toUpperCase() ??
+                            'T',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    teacher['email'],
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
+                  const SizedBox(width: 16),
+                  // Teacher Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          teacher['profile']?['name'] ?? teacher['email'],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$classCount Class${classCount != 1 ? 'es' : ''}, $subjectCount Club${subjectCount != 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildStatusChip(
-                        Icons.class_,
-                        '$classCount Class${classCount != 1 ? 'es' : ''}',
-                        Colors.blue,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildStatusChip(
-                        Icons.book,
-                        '$subjectCount Subject${subjectCount != 1 ? 's' : ''}',
-                        Colors.green,
-                      ),
-                    ],
+                  // Edit Icon
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      color: Colors.grey[700],
+                      onPressed: () => _showAssignmentDialog(teacher),
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                    ),
                   ),
                 ],
               ),
-            ),
-            // Edit Button
-            IconButton(
-              onPressed: () => _showAssignmentDialog(teacher),
-              icon: const Icon(Icons.edit),
-              color: const Color(0xFFBA78FC),
-              tooltip: 'Edit Assignments',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
+              const SizedBox(height: 16),
+              // Workload Section
+              Row(
+                children: [
+                  Text(
+                    'Workload: ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '$workloadPercent%',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: workloadColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: workloadPercent / 100,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(workloadColor),
+                  minHeight: 8,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

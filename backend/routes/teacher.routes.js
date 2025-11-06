@@ -10,9 +10,16 @@ router.use(verifyToken, authorize('teacher'));
 // Dashboard
 router.get('/dashboard', teacherController.getDashboard);
 
+// Assignments (Classes & Subjects)
+router.get('/assignments', teacherController.getAssignments);
+
 // Classes
 router.get('/classes', teacherController.getClasses);
+router.get('/subjects', teacherController.getSubjects);
 router.get('/students/:classId', teacherController.getStudentsByClass);
+
+// Student Details
+router.get('/student/:id', teacherController.getStudentDetails);
 
 // Attendance
 router.post('/attendance', attendanceValidation, teacherController.markAttendance);
