@@ -1,10 +1,10 @@
 // API Configuration
 class ApiConfig {
-  // Base URL - Production API on Render
-  static const String baseUrl = 'https://vindhya-niketan.onrender.com/api';
+  // Base URL - Local development
+  //static const String baseUrl = 'http://192.168.31.75:5000/api';
   
-  // Local development (uncomment when testing locally)
-  // static const String baseUrl = 'http://10.189.55.228:5000/api';
+  // Production API on Render (uncomment for production)
+  static const String baseUrl = 'https://vindhya-niketan.onrender.com/api';
   
   // API Endpoints
   static const String login = '/auth/login';
@@ -188,4 +188,14 @@ class AppStrings {
   static const String loginFailed = 'Login failed. Please try again.';
   static const String networkError = 'Network error. Please check your connection.';
   static const String somethingWentWrong = 'Something went wrong. Please try again.';
+}
+
+// String extensions used across the app
+extension StringExtensions on String {
+  /// Capitalize the first letter and make the rest lowercase.
+  /// Example: 'male' -> 'Male'
+  String capitalize() {
+    if (isEmpty) return this;
+    return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
+  }
 }

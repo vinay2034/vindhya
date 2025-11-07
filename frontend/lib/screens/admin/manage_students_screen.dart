@@ -6,6 +6,7 @@ import '../../services/api_service.dart';
 import '../../dependency_injection.dart';
 import '../../utils/constants.dart';
 import 'student_registration_screen.dart';
+import 'student_profile_screen.dart';
 
 class ManageStudentsScreen extends StatefulWidget {
   const ManageStudentsScreen({super.key});
@@ -664,6 +665,14 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> with Single
                             side: BorderSide(color: Colors.grey[200]!),
                           ),
                           child: ListTile(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => StudentProfileScreen(student: student),
+                                ),
+                              );
+                            },
                             contentPadding: const EdgeInsets.all(16),
                             leading: CircleAvatar(
                               radius: 28,

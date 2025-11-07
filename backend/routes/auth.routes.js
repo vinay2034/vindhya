@@ -8,11 +8,11 @@ const upload = require('../middleware/upload.middleware');
 // Public routes
 router.post('/register', registerValidation, authController.register);
 router.post('/login', loginValidation, authController.login);
-
 // Protected routes
 router.get('/me', verifyToken, authController.getProfile);
 router.put('/profile', verifyToken, authController.updateProfile);
 router.post('/upload-avatar', verifyToken, upload.single('avatar'), authController.uploadAvatar);
+router.put('/change-password', verifyToken, authController.changePassword);
 router.post('/logout', verifyToken, authController.logout);
 
 module.exports = router;

@@ -160,7 +160,7 @@ const deleteUser = async (req, res) => {
 // @access  Private/Admin
 const getStudents = async (req, res) => {
   try {
-    const { classId, isActive, page = 1, limit = 10 } = req.query;
+    const { classId, isActive, page = 1, limit = 1000 } = req.query; // Increased default limit
     
     const query = {};
     if (classId) query.classId = classId;

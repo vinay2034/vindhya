@@ -41,7 +41,7 @@ const feeSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['cash', 'card', 'online', 'cheque', 'bank_transfer'],
+    enum: ['cash', 'card', 'online', 'cheque', 'bank_transfer', null],
     default: null
   },
   transactionId: {

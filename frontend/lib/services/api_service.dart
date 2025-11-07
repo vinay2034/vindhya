@@ -155,4 +155,113 @@ class ApiService {
     
     return 'An unexpected error occurred.';
   }
+
+  // Change Password
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/auth/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Dashboard Statistics Methods
+  Future<Map<String, dynamic>> getStudents() async {
+    try {
+      final response = await _dio.get(
+        '/admin/students',
+        queryParameters: {
+          '_t': DateTime.now().millisecondsSinceEpoch, // Cache buster
+        },
+        options: Options(
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        ),
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getUsers({String? role}) async {
+    try {
+      final queryParams = <String, dynamic>{
+        '_t': DateTime.now().millisecondsSinceEpoch, // Cache buster
+      };
+      if (role != null) {
+        queryParams['role'] = role;
+      }
+      
+      final response = await _dio.get(
+        '/admin/users',
+        queryParameters: queryParams,
+        options: Options(
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        ),
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getClasses() async {
+    try {
+      final response = await _dio.get(
+        '/admin/classes',
+        queryParameters: {
+          '_t': DateTime.now().millisecondsSinceEpoch, // Cache buster
+        },
+        options: Options(
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        ),
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getSubjects() async {
+    try {
+      final response = await _dio.get(
+        '/admin/subjects',
+        queryParameters: {
+          '_t': DateTime.now().millisecondsSinceEpoch, // Cache buster
+        },
+        options: Options(
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        ),
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
