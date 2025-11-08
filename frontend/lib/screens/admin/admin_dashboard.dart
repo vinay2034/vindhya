@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
+import 'attendance_reports_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -239,7 +240,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   'Attendance Reports',
                   'View attendance statistics',
                   Icons.analytics,
-                  () {},
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AttendanceReportsScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
