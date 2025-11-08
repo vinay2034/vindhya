@@ -154,7 +154,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             
             // Tabs
             DefaultTabController(
-              length: 3,
+              length: 4,
               child: Column(
                 children: [
                   TabBar(
@@ -165,6 +165,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       Tab(text: 'Details'),
                       Tab(text: 'Attendance'),
                       Tab(text: 'Grades'),
+                      Tab(text: 'Fees'),
                     ],
                   ),
                   SizedBox(
@@ -174,6 +175,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         _buildDetailsTab(),
                         _buildAttendanceTab(),
                         _buildGradesTab(),
+                        _buildFeesTab(),
                       ],
                     ),
                   ),
@@ -609,5 +611,279 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month - 1];
+  }
+
+  Widget _buildFeesTab() {
+    // Mock fee data - in real app, this would come from API
+    final List<Map<String, dynamic>> feeInvoices = [
+      {
+        'title': 'Term 2 Tuition Fee',
+        'amount': 750.00,
+        'dueDate': '15 Oct 2023',
+        'status': 'Overdue',
+        'color': Colors.red,
+        'icon': Icons.error_outline,
+      },
+      {
+        'title': 'Extracurricular Activities',
+        'amount': 500.00,
+        'dueDate': '30 Nov 2023',
+        'status': 'Pending',
+        'color': Colors.orange,
+        'icon': Icons.hourglass_empty,
+      },
+      {
+        'title': 'Term 1 Tuition Fee',
+        'amount': 5500.00,
+        'paidDate': '12 Aug 2023',
+        'status': 'Paid',
+        'color': Colors.green,
+        'icon': Icons.check_circle_outline,
+      },
+    ];
+
+    final double outstandingBalance = feeInvoices
+        .where((fee) => fee['status'] != 'Paid')
+        .fold(0.0, (sum, fee) => sum + fee['amount']);
+
+    final double totalPaid = feeInvoices
+        .where((fee) => fee['status'] == 'Paid')
+        .fold(0.0, (sum, fee) => sum + fee['amount']);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Summary Cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeeSummaryCard(
+                'Outstanding\nBalance',
+                '₹${outstandingBalance.toStringAsFixed(2)}',
+                Colors.red.shade50,
+                Colors.red.shade700,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFeeSummaryCard(
+                'Total Paid',
+                '₹${totalPaid.toStringAsFixed(2)}',
+                Colors.green.shade50,
+                Colors.green.shade700,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // Tabs for Invoices and Payment History
+        DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TabBar(
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey[700],
+                  indicator: BoxDecoration(
+                    color: Color(AppColors.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  tabs: const [
+                    Tab(text: 'Invoices'),
+                    Tab(text: 'Payment History'),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 400,
+                child: TabBarView(
+                  children: [
+                    // Invoices Tab
+                    ListView.builder(
+                      padding: const EdgeInsets.only(top: 16),
+                      itemCount: feeInvoices.length,
+                      itemBuilder: (context, index) {
+                        final invoice = feeInvoices[index];
+                        return _buildFeeInvoiceCard(invoice);
+                      },
+                    ),
+                    // Payment History Tab
+                    ListView.builder(
+                      padding: const EdgeInsets.only(top: 16),
+                      itemCount: feeInvoices.where((f) => f['status'] == 'Paid').length,
+                      itemBuilder: (context, index) {
+                        final paidInvoices = feeInvoices.where((f) => f['status'] == 'Paid').toList();
+                        return _buildFeeInvoiceCard(paidInvoices[index]);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Pay Now Button
+        if (outstandingBalance > 0)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Payment gateway integration coming soon!'),
+                    backgroundColor: Color(AppColors.primary),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.payment),
+              label: Text('Pay Now (₹${outstandingBalance.toStringAsFixed(2)})'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(AppColors.primary),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFeeSummaryCard(String label, String amount, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textColor.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            amount,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeeInvoiceCard(Map<String, dynamic> invoice) {
+    final bool isPaid = invoice['status'] == 'Paid';
+    final Color statusColor = invoice['color'];
+    final String dateLabel = isPaid ? 'Paid on: ${invoice['paidDate']}' : 'Due Date: ${invoice['dueDate']}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                invoice['icon'],
+                color: statusColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      invoice['status'].toString().toUpperCase(),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Title
+                  Text(
+                    invoice['title'],
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Date
+                  Text(
+                    dateLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Amount
+            Text(
+              '₹${invoice['amount'].toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: statusColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -57,17 +57,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         _todayAttendance = (_totalStudents * 0.85).round(); // 85% attendance
         _isLoading = false;
       });
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Dashboard updated: $_totalStudents students, $_totalTeachers teachers, $_activeClasses classes, $_totalSubjects subjects'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -89,11 +78,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboardData,
-            tooltip: 'Refresh Data',
-          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
@@ -183,47 +167,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 const SizedBox(height: 12),
                 
                 _buildMenuCard(
-                  'Manage Classes',
-                  'Create and manage classes',
-                  Icons.class_,
-                  () {
-                    Navigator.pushNamed(context, '/manage-classes');
-                  },
-                ),
-                
-                _buildMenuCard(
-                  'Manage Subjects',
-                  'Add and organize subjects',
-                  Icons.book,
-                  () {
-                    Navigator.pushNamed(context, '/manage-subjects');
-                  },
-                ),
-                
-                _buildMenuCard(
                   'Timetable Management',
                   'Create and manage class schedules',
                   Icons.schedule,
                   () {
                     Navigator.pushNamed(context, '/manage-timetable');
-                  },
-                ),
-                
-                _buildMenuCard(
-                  'Teacher Assignments',
-                  'Assign classes and subjects to teachers',
-                  Icons.assignment_ind,
-                  () {
-                    Navigator.pushNamed(context, '/teacher-assignments');
-                  },
-                ),
-                
-                _buildMenuCard(
-                  'Fees Management',
-                  'Track fees and payments',
-                  Icons.payments,
-                  () {
-                    Navigator.pushNamed(context, '/fees-management');
                   },
                 ),
                 
@@ -247,6 +195,51 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         builder: (context) => const AttendanceReportsScreen(),
                       ),
                     );
+                  },
+                ),
+                
+                _buildMenuCard(
+                  'Fees Management',
+                  'Track fees and payments',
+                  Icons.payments,
+                  () {
+                    Navigator.pushNamed(context, '/fees-management');
+                  },
+                ),
+                
+                _buildMenuCard(
+                  'Manage Teachers',
+                  'View and manage teacher profiles',
+                  Icons.people,
+                  () {
+                    Navigator.pushNamed(context, '/manage-teachers');
+                  },
+                ),
+                
+                _buildMenuCard(
+                  'Teacher Assignments',
+                  'Assign classes and subjects to teachers',
+                  Icons.assignment_ind,
+                  () {
+                    Navigator.pushNamed(context, '/teacher-assignments');
+                  },
+                ),
+                
+                _buildMenuCard(
+                  'Manage Classes',
+                  'Create and manage classes',
+                  Icons.class_,
+                  () {
+                    Navigator.pushNamed(context, '/manage-classes');
+                  },
+                ),
+                
+                _buildMenuCard(
+                  'Manage Subjects',
+                  'Add and organize subjects',
+                  Icons.book,
+                  () {
+                    Navigator.pushNamed(context, '/manage-subjects');
                   },
                 ),
               ],
