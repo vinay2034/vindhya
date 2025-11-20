@@ -3,6 +3,7 @@ import '../../utils/constants.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import 'teacher_profile_admin_view.dart';
+import 'teacher_registration_screen.dart';
 
 class ManageTeachersScreen extends StatefulWidget {
   const ManageTeachersScreen({super.key});
@@ -73,10 +74,18 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add teacher feature coming soon!')),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TeacherRegistrationScreen(),
+                ),
               );
+              
+              // Reload teachers list if a new teacher was added
+              if (result == true) {
+                await _loadTeachers();
+              }
             },
           ),
         ],
@@ -265,6 +274,14 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
               ),
             ),
 
+            // Show Credentials Button
+            IconButton(
+              icon: const Icon(Icons.key, size: 20),
+              color: const Color(AppColors.primary),
+              onPressed: () => _showCredentials(teacher),
+              tooltip: 'Show Login Credentials',
+            ),
+
             // Arrow Icon
             Icon(
               Icons.arrow_forward_ios,
@@ -274,6 +291,85 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showCredentials(Map<String, dynamic> teacher) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.key, color: Color(AppColors.primary)),
+            SizedBox(width: 8),
+            Text('Login Credentials'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Teacher: ${teacher['profile']?['name'] ?? 'N/A'}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            _buildCredentialRow('Email', teacher['email'] ?? 'N/A'),
+            const SizedBox(height: 8),
+            _buildCredentialRow('Default Password', 'teacher123'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Teachers can login with their email and the default password "teacher123"',
+                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCredentialRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            '$label:',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SelectableText(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
     );
   }
 }

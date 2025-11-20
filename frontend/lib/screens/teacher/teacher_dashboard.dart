@@ -504,7 +504,14 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             child: IconButton(
               icon: const Icon(Icons.chevron_right, color: Colors.white, size: 24),
               onPressed: () {
-                // Navigate to class details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentsListScreen(
+                      selectedClassId: classData['_id'],
+                    ),
+                  ),
+                );
               },
               padding: EdgeInsets.zero,
             ),

@@ -114,8 +114,9 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
       // Step 1: Create teacher user account
       final teacherData = {
         'email': emailController.text.trim(),
-        'password': mobileController.text.trim(), // Mobile as default password
+        'password': 'teacher123', // Default password for all teachers
         'role': 'teacher',
+        'employeeId': employeeIdController.text.trim(),
         'profile': {
           'name': nameController.text.trim(),
           'phone': mobileController.text.trim(),
@@ -151,13 +152,13 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
         }
       }
 
-      // Step 3: Assign subjects and classes (if API supports it)
+      // Step 3: Assign subjects and classes
       if (selectedSubjects.isNotEmpty || selectedClasses.isNotEmpty) {
         try {
           await _apiService.put(
             '${ApiConfig.users}/$teacherId',
             data: {
-              'assignedSubjects': selectedSubjects,
+              'subjectsTaught': selectedSubjects,
               'assignedClasses': selectedClasses,
             },
           );
@@ -171,7 +172,8 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
           SnackBar(
             content: Text(
               'Teacher registered successfully!\n'
-              'Login - Email: ${emailController.text.trim()}, Password: ${mobileController.text.trim()}',
+              'Email: ${emailController.text.trim()}\n'
+              'Default Password: teacher123',
             ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 5),

@@ -1,7 +1,7 @@
 // API Configuration
 class ApiConfig {
   // Base URL - Local development
-  static const String baseUrl = 'http://192.168.31.75:3000/api';
+  static const String baseUrl = 'http://10.65.235.228:3000/api';
   
   // Production API on Render (uncomment for production)
   //static const String baseUrl = 'https://vindhya-niketan.onrender.com/api';

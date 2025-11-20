@@ -4,7 +4,8 @@ import '../../dependency_injection.dart';
 import 'student_details_screen.dart';
 
 class StudentsListScreen extends StatefulWidget {
-  const StudentsListScreen({super.key});
+  final String? selectedClassId;
+  const StudentsListScreen({super.key, this.selectedClassId});
 
   @override
   State<StudentsListScreen> createState() => _StudentsListScreenState();
@@ -14,13 +15,12 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
   final ApiService _apiService = getIt<ApiService>();
   final TextEditingController _searchController = TextEditingController();
 
-  List<Map<String, dynamic>> _allStudents = [];
-  List<Map<String, dynamic>> _filteredStudents = [];
-  String _selectedGrade = 'All';
+  List<Map<String, dynamic>> _assignedClasses = [];
+  Map<String, List<Map<String, dynamic>>> _studentsByClass = {};
+  Map<String, bool> _expandedClasses = {};
+  String _searchQuery = '';
   bool _isLoading = true;
   final int _currentNavIndex = 1;
-
-  final List<String> _grades = ['All', '10-A', '10-B', '11-A', '11-B'];
 
   @override
   void initState() {
@@ -37,28 +37,45 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
   Future<void> _loadAllStudents() async {
     setState(() => _isLoading = true);
     try {
-      // Get all classes
+      // Get all assigned classes for this teacher
       final classesResponse = await _apiService.get('/teacher/classes');
       final classesData = classesResponse.data['data'];
       final classes = List<Map<String, dynamic>>.from(
         classesData is List ? classesData : []
       );
 
-      // Get students from all classes
-      List<Map<String, dynamic>> allStudents = [];
+      // Load students for each class
+      Map<String, List<Map<String, dynamic>>> studentsByClass = {};
+      Map<String, bool> expandedClasses = {};
+      
       for (var classData in classes) {
         final classId = classData['_id'];
+        final className = classData['className'] ?? classData['name'] ?? 'Unknown Class';
+        final section = classData['section'] ?? '';
+        final fullClassName = section.isNotEmpty ? '$className - $section' : className;
+        
+        // Expand the selected class by default, or first class if no selection
+        expandedClasses[classId] = widget.selectedClassId == classId || 
+                                   (widget.selectedClassId == null && studentsByClass.isEmpty);
+        
         try {
-          final studentsResponse = await _apiService.get('/teacher/classes/$classId/students');
+          final studentsResponse = await _apiService.get('/teacher/students/$classId');
           final studentsData = studentsResponse.data['data'];
+          
+          // Backend returns { students: [...] }, not just [...]
+          final studentsList = studentsData['students'];
           final students = List<Map<String, dynamic>>.from(
-            studentsData is List ? studentsData : []
+            studentsList is List ? studentsList : []
           );
           
-          // Add grade information to each student
-          for (var student in students) {
-            student['grade'] = classData['name'] ?? 'Unknown';
-            allStudents.add(student);
+          if (students.isNotEmpty) {
+            // Add class information to each student
+            for (var student in students) {
+              student['className'] = fullClassName;
+              student['classId'] = classId;
+            }
+            studentsByClass[classId] = students;
+            classData['fullClassName'] = fullClassName;
           }
         } catch (e) {
           print('Error loading students for class $classId: $e');
@@ -66,8 +83,9 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
       }
 
       setState(() {
-        _allStudents = allStudents;
-        _filteredStudents = allStudents;
+        _assignedClasses = classes.where((c) => studentsByClass.containsKey(c['_id'])).toList();
+        _studentsByClass = studentsByClass;
+        _expandedClasses = expandedClasses;
         _isLoading = false;
       });
     } catch (e) {
@@ -81,40 +99,43 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
     }
   }
 
-  void _filterStudents() {
-    setState(() {
-      _filteredStudents = _allStudents.where((student) {
-        final matchesGrade = _selectedGrade == 'All' || 
-                            student['grade']?.toString().contains(_selectedGrade) == true;
-        
-        final searchLower = _searchController.text.toLowerCase();
-        final matchesSearch = searchLower.isEmpty ||
-                             student['name']?.toString().toLowerCase().contains(searchLower) == true ||
-                             student['rollNumber']?.toString().toLowerCase().contains(searchLower) == true;
-        
-        return matchesGrade && matchesSearch;
-      }).toList();
-    });
+  List<Map<String, dynamic>> _getFilteredStudents(List<Map<String, dynamic>> students) {
+    if (_searchQuery.isEmpty) return students;
+    
+    final searchLower = _searchQuery.toLowerCase();
+    return students.where((student) {
+      return student['name']?.toString().toLowerCase().contains(searchLower) == true ||
+             student['rollNumber']?.toString().toLowerCase().contains(searchLower) == true;
+    }).toList();
+  }
+
+  int _getTotalStudents() {
+    int total = 0;
+    for (var students in _studentsByClass.values) {
+      total += students.length;
+    }
+    return total;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             _buildSearchBar(),
-            _buildGradeFilters(),
+            if (!_isLoading && _assignedClasses.isNotEmpty)
+              _buildSummaryCard(),
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator(
                       color: Color(0xFFBA78FC),
                     ))
-                  : _filteredStudents.isEmpty
+                  : _assignedClasses.isEmpty
                       ? _buildEmptyState()
-                      : _buildStudentsList(),
+                      : _buildClassWiseStudentsList(),
             ),
           ],
         ),
@@ -148,19 +169,42 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: TextField(
         controller: _searchController,
-        onChanged: (value) => _filterStudents(),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Search student name or roll no.',
           hintStyle: TextStyle(color: Colors.grey.shade400),
           prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFBA78FC)),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
@@ -168,58 +212,218 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
     );
   }
 
-  Widget _buildGradeFilters() {
+  Widget _buildSummaryCard() {
+    final totalStudents = _getTotalStudents();
+    final totalClasses = _assignedClasses.length;
+    
     return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _grades.length,
-        itemBuilder: (context, index) {
-          final grade = _grades[index];
-          final isSelected = _selectedGrade == grade;
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedGrade = grade;
-                  _filterStudents();
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFBA78FC) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    grade,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFBA78FC), Color(0xFF9D5FD8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFBA78FC).withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildSummaryItem(Icons.class_, totalClasses.toString(), 'Classes'),
+          Container(
+            width: 1,
+            height: 40,
+            color: Colors.white.withOpacity(0.3),
+          ),
+          _buildSummaryItem(Icons.people, totalStudents.toString(), 'Students'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(IconData icon, String value, String label) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildClassWiseStudentsList() {
+    return RefreshIndicator(
+      onRefresh: _loadAllStudents,
+      color: const Color(0xFFBA78FC),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        itemCount: _assignedClasses.length,
+        itemBuilder: (context, index) {
+          final classData = _assignedClasses[index];
+          final classId = classData['_id'];
+          final className = classData['fullClassName'] ?? 'Unknown Class';
+          final students = _studentsByClass[classId] ?? [];
+          final filteredStudents = _getFilteredStudents(students);
+          final isExpanded = _expandedClasses[classId] ?? false;
+
+          return _buildClassCard(
+            classId,
+            className,
+            filteredStudents,
+            students.length,
+            isExpanded,
           );
         },
       ),
     );
   }
 
-  Widget _buildStudentsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: _filteredStudents.length,
-      itemBuilder: (context, index) {
-        final student = _filteredStudents[index];
-        return _buildStudentCard(student);
-      },
+  Widget _buildClassCard(
+    String classId,
+    String className,
+    List<Map<String, dynamic>> filteredStudents,
+    int totalStudents,
+    bool isExpanded,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _expandedClasses[classId] = !isExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFBA78FC).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.class_,
+                      color: Color(0xFFBA78FC),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          className,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$totalStudents student${totalStudents != 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey.shade600,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded) ...[
+            const Divider(height: 1),
+            if (filteredStudents.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _searchQuery.isEmpty
+                      ? 'No students in this class'
+                      : 'No students match your search',
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: filteredStudents.length,
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  indent: 72,
+                  color: Colors.grey.shade100,
+                ),
+                itemBuilder: (context, index) {
+                  return _buildStudentCard(filteredStudents[index]);
+                },
+              ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -231,7 +435,7 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
     // Get first letter for avatar
     final firstLetter = name.isNotEmpty ? name[0].toUpperCase() : '?';
     
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         if (studentId != null) {
           Navigator.push(
@@ -244,35 +448,34 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
           );
         }
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Avatar
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFFBA78FC).withOpacity(0.1),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFBA78FC), Color(0xFF9D5FD8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
                   firstLetter,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFBA78FC),
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             // Name and Roll Number
             Expanded(
               child: Column(
@@ -281,16 +484,16 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
                   Text(
                     name,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
-                    'Roll No: $rollNumber',
+                    'Roll: $rollNumber',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -300,7 +503,8 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
             // Arrow
             Icon(
               Icons.chevron_right,
-              color: Colors.grey.shade400,
+              color: Colors.grey.shade300,
+              size: 20,
             ),
           ],
         ),
@@ -313,28 +517,38 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.people_outline,
-            size: 80,
-            color: Colors.grey.shade300,
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.school_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            'No students found',
+            'No Classes Assigned',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade700,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            _searchController.text.isEmpty
-                ? 'Try selecting a different grade'
-                : 'Try adjusting your search',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'You don\'t have any classes assigned yet.\nPlease contact the administrator.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ],

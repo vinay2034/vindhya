@@ -54,6 +54,23 @@ const userSchema = new mongoose.Schema({
       type: String,
       enum: ['male', 'female', 'other', null],
       default: null
+    },
+    // Teacher-specific profile fields
+    designation: {
+      type: String,
+      default: null
+    },
+    joiningDate: {
+      type: String,
+      default: null
+    },
+    qualification: {
+      type: String,
+      default: null
+    },
+    experience: {
+      type: Number,
+      default: 0
     }
   },
   // Teacher-specific fields
