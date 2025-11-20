@@ -81,7 +81,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading students: ')),
+          const SnackBar(content: Text('Error loading students: ')),
         );
       }
     }
@@ -317,7 +317,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
                         child: _buildSummaryCard(
                           'Total Outstanding',
                           '₹${_totalOutstanding.toStringAsFixed(0)}',
-                          Color(AppColors.primary),
+                          const Color(AppColors.primary),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -396,7 +396,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${_selectedFilter} (${_filteredStudents.length})',
+                        '$_selectedFilter (${_filteredStudents.length})',
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
@@ -480,7 +480,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundColor: Color(AppColors.primary),
+              backgroundColor: const Color(AppColors.primary),
               child: Text(
                 _getInitials(student['name']),
                 style: const TextStyle(

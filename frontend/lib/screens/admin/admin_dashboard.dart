@@ -103,7 +103,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         'Total Students',
                         _totalStudents.toString(),
                         Icons.people,
-                        Color(AppColors.primary),
+                        const Color(AppColors.primary),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -112,7 +112,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         'Total Teachers',
                         _totalTeachers.toString(),
                         Icons.school,
-                        Color(AppColors.secondary),
+                        const Color(AppColors.secondary),
                       ),
                     ),
                   ],
@@ -128,7 +128,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         'Active Classes',
                         _activeClasses.toString(),
                         Icons.class_,
-                        Color(AppColors.success),
+                        const Color(AppColors.success),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -137,7 +137,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         'Subjects',
                         _totalSubjects.toString(),
                         Icons.book,
-                        Color(AppColors.warning),
+                        const Color(AppColors.warning),
                       ),
                     ),
                   ],
@@ -145,13 +145,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 
                 const SizedBox(height: 12),
                 
-                // Stats Cards - Row 3 (Today's Attendance)
-                _buildStatCard(
-                  'Today\'s Attendance',
-                  '$_todayAttendance / $_totalStudents',
-                  Icons.how_to_reg,
-                  Color(AppColors.info),
-                ),
+                // Today's Attendance Card - Enhanced Design
+                _buildEnhancedAttendanceCard(),
                 
                 const SizedBox(height: 24),
                 
@@ -248,6 +243,161 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  Widget _buildEnhancedAttendanceCard() {
+    // Calculate attendance percentage
+    final attendancePercentage = _totalStudents > 0 
+        ? ((_todayAttendance / _totalStudents) * 100).round() 
+        : 0;
+    
+    // Get today's date
+    final now = DateTime.now();
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dateString = '${months[now.month - 1]} ${now.day}';
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              Colors.grey.shade50,
+            ],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.verified_user,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "Today's Attendance",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  dateString,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Progress Bar
+            Stack(
+              children: [
+                // Background bar
+                Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                // Progress bar
+                FractionallySizedBox(
+                  widthFactor: attendancePercentage / 100,
+                  child: Container(
+                    height: 12,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF4CAF50),
+                          Color(0xFF66BB6A),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Stats Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Overall percentage
+                Row(
+                  children: [
+                    Text(
+                      'Overall: ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '$attendancePercentage%',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                // Present count
+                Text(
+                  '$_todayAttendance / $_totalStudents Present',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
@@ -282,8 +432,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Color(AppColors.primary).withOpacity(0.1),
-          child: Icon(icon, color: Color(AppColors.primary)),
+          backgroundColor: const Color(AppColors.primary).withOpacity(0.1),
+          child: Icon(icon, color: const Color(AppColors.primary)),
         ),
         title: Text(
           title,

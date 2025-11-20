@@ -534,7 +534,7 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -703,7 +703,7 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
                   });
                 },
               );
-            }).toList(),
+            }),
             InkWell(
               onTap: () => _showSubjectSelector(),
               child: Container(
@@ -764,7 +764,7 @@ class _TeacherRegistrationScreenState extends State<TeacherRegistrationScreen> {
                   });
                 },
               );
-            }).toList(),
+            }),
             InkWell(
               onTap: () => _showClassSelector(),
               child: Container(

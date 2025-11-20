@@ -4,7 +4,7 @@ import '../../services/storage_service.dart';
 import '../../utils/constants.dart';
 
 class ManageTimetableScreen extends StatefulWidget {
-  const ManageTimetableScreen({Key? key}) : super(key: key);
+  const ManageTimetableScreen({super.key});
 
   @override
   State<ManageTimetableScreen> createState() => _ManageTimetableScreenState();
@@ -169,7 +169,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Timetable Management'),
-        backgroundColor: Color(AppColors.primary),
+        backgroundColor: const Color(AppColors.primary),
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -202,7 +202,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
             children: [
               // Class Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedClassId,
+                initialValue: _selectedClassId,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Class',
@@ -235,7 +235,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
               const SizedBox(height: 8),
               // Academic Year Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedAcademicYear,
+                initialValue: _selectedAcademicYear,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Academic Year',
@@ -284,8 +284,8 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
                       dataRowHeight: 54,
                       headingRowHeight: 48,
                       border: TableBorder.all(color: Colors.grey[300]!),
-                      headingRowColor: MaterialStateProperty.all(
-                        Color(AppColors.primary).withOpacity(0.2),
+                      headingRowColor: WidgetStateProperty.all(
+                        const Color(AppColors.primary).withOpacity(0.2),
                       ),
                       columns: [
                         const DataColumn(
@@ -346,7 +346,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
                           );
                         }),
                         DataRow(
-                          color: MaterialStateProperty.all(Colors.amber[50]),
+                          color: WidgetStateProperty.all(Colors.amber[50]),
                           cells: [
                             const DataCell(
                               Center(
@@ -418,7 +418,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
             children: [
               // Teacher Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedTeacherId,
+                initialValue: _selectedTeacherId,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Teacher',
@@ -452,7 +452,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
               const SizedBox(height: 8),
               // Academic Year Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedAcademicYear,
+                initialValue: _selectedAcademicYear,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Academic Year',
@@ -501,8 +501,8 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
                       dataRowHeight: 54,
                       headingRowHeight: 48,
                       border: TableBorder.all(color: Colors.grey[300]!),
-                      headingRowColor: MaterialStateProperty.all(
-                        Color(AppColors.primary).withOpacity(0.2),
+                      headingRowColor: WidgetStateProperty.all(
+                        const Color(AppColors.primary).withOpacity(0.2),
                       ),
                       columns: [
                         const DataColumn(
@@ -581,7 +581,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen>
           maxHeight: 50,
         ),
         decoration: BoxDecoration(
-          color: Color(AppColors.primary).withOpacity(0.1),
+          color: const Color(AppColors.primary).withOpacity(0.1),
           borderRadius: BorderRadius.circular(3),
         ),
         child: Column(
@@ -848,7 +848,7 @@ class _TimetableEntryDialogState extends State<_TimetableEntryDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: _selectedClassId,
+                initialValue: _selectedClassId,
                 decoration: const InputDecoration(labelText: 'Class'),
                 items: widget.classes.map((cls) {
                   return DropdownMenuItem<String>(
@@ -861,7 +861,7 @@ class _TimetableEntryDialogState extends State<_TimetableEntryDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedSubjectId,
+                initialValue: _selectedSubjectId,
                 decoration: const InputDecoration(labelText: 'Subject'),
                 items: widget.subjects.map((subject) {
                   return DropdownMenuItem<String>(
@@ -874,7 +874,7 @@ class _TimetableEntryDialogState extends State<_TimetableEntryDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedTeacherId,
+                initialValue: _selectedTeacherId,
                 decoration: const InputDecoration(labelText: 'Teacher'),
                 items: widget.teachers.map((teacher) {
                   return DropdownMenuItem<String>(
@@ -887,7 +887,7 @@ class _TimetableEntryDialogState extends State<_TimetableEntryDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedDay,
+                initialValue: _selectedDay,
                 decoration: const InputDecoration(labelText: 'Day'),
                 items: _days.map((day) {
                   return DropdownMenuItem(value: day, child: Text(day));
@@ -900,7 +900,7 @@ class _TimetableEntryDialogState extends State<_TimetableEntryDialog> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _startTime,
+                      initialValue: _startTime,
                       decoration: const InputDecoration(labelText: 'Start Time'),
                       items: _timeSlots.map((slot) {
                         return DropdownMenuItem(

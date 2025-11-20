@@ -96,8 +96,9 @@ class _AttendanceReportsScreenState extends State<AttendanceReportsScreen> {
     
     for (var record in data) {
       final status = record['status'];
-      if (status == 'present') _presentCount++;
-      else if (status == 'absent') _absentCount++;
+      if (status == 'present') {
+        _presentCount++;
+      } else if (status == 'absent') _absentCount++;
       else if (status == 'late') _lateCount++;
       
       // Group by date and class for daily summary
@@ -516,7 +517,7 @@ class _AttendanceReportsScreenState extends State<AttendanceReportsScreen> {
                             _loadAttendanceData();
                           },
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

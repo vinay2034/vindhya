@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../dependency_injection.dart';
-import 'teacher_edit_profile_screen.dart';
 
 class TeacherProfileScreen extends StatefulWidget {
   const TeacherProfileScreen({super.key});
@@ -10,18 +9,28 @@ class TeacherProfileScreen extends StatefulWidget {
   State<TeacherProfileScreen> createState() => _TeacherProfileScreenState();
 }
 
-class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
+class _TeacherProfileScreenState extends State<TeacherProfileScreen>
+    with SingleTickerProviderStateMixin {
   final ApiService _apiService = getIt<ApiService>();
   
   Map<String, dynamic>? _teacherData;
   List<Map<String, dynamic>> _assignedClasses = [];
   List<Map<String, dynamic>> _subjects = [];
+  List<Map<String, dynamic>> _todaySchedule = [];
   bool _isLoading = true;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 4, vsync: this);
     _loadTeacherProfile();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTeacherProfile() async {
@@ -35,6 +44,22 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
       final assignmentsResponse = await _apiService.get('/teacher/assignments');
       final assignmentsData = assignmentsResponse.data['data'];
       
+      // Mock today's schedule - in real app would come from timetable API
+      final schedule = [
+        {
+          'subject': 'Math',
+          'grade': '10A',
+          'time': '09:00 - 10:00',
+          'room': 'Room 201',
+        },
+        {
+          'subject': 'Math',
+          'grade': '11B',
+          'time': '10:00 - 11:00',
+          'room': 'Room 203',
+        },
+      ];
+      
       setState(() {
         _teacherData = userData;
         _assignedClasses = List<Map<String, dynamic>>.from(
@@ -43,6 +68,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
         _subjects = List<Map<String, dynamic>>.from(
           assignmentsData['subjects'] ?? []
         );
+        _todaySchedule = schedule;
         _isLoading = false;
       });
     } catch (e) {
@@ -58,88 +84,301 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          TextButton(
-            onPressed: _teacherData == null ? null : () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TeacherEditProfileScreen(
-                    teacherData: _teacherData!,
-                  ),
-                ),
-              );
-              
-              // Reload profile if changes were saved
-              if (result == true) {
-                _loadTeacherProfile();
-              }
-            },
-            child: const Text(
-              'Edit',
-              style: TextStyle(
-                color: Color(0xFFBA78FC),
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
-        ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Profile Header
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        // Profile Picture
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: const Color(0xFFE5B87E),
-                          child: _teacherData?['profile']?['avatar'] != null
-                              ? ClipOval(
-                                  child: Image.network(
-                                    _teacherData!['profile']['avatar'],
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
+          : Column(
+              children: [
+                // Profile Header
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Column(
+                    children: [
+                      // Profile Picture and Name
+                      Row(
+                        children: [
+                          // Profile Picture
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: const Color(0xFFBA78FC),
+                            child: _teacherData?['profile']?['avatar'] != null
+                                ? ClipOval(
+                                    child: Image.network(
+                                      _teacherData!['profile']['avatar'],
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Text(
+                                    _getInitials(),
+                                    style: const TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: Colors.white,
+                          ),
+                          const SizedBox(width: 20),
+                          
+                          // Name and Grade/Class
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _teacherData?['profile']?['name'] ?? 'Teacher',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
                                 ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _getDesignation(),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tab Bar
+                Container(
+                  color: Colors.white,
+                  child: TabBar(
+                    controller: _tabController,
+                    isScrollable: false,
+                    labelColor: const Color(0xFFBA78FC),
+                    unselectedLabelColor: Colors.grey[600],
+                    indicatorColor: const Color(0xFFBA78FC),
+                    indicatorWeight: 3,
+                    labelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    tabs: const [
+                      Tab(text: 'Details'),
+                      Tab(text: 'Attendance'),
+                      Tab(text: 'Grades'),
+                      Tab(text: 'Fees'),
+                    ],
+                  ),
+                ),
+
+                // Tab Views
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildDetailsTab(),
+                      _buildAttendanceTab(),
+                      _buildGradesTab(),
+                      _buildFeesTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  String _getInitials() {
+    final name = _teacherData?['profile']?['name'] ?? 'T';
+    final parts = name.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.substring(0, 1).toUpperCase();
+  }
+
+  Widget _buildDetailsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Today's Timetable
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Today's Timetable",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ..._todaySchedule.map((schedule) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFBA78FC).withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(height: 16),
-                        // Name
-                        Text(
-                          _teacherData?['profile']?['name'] ?? 'Teacher',
-                          style: const TextStyle(
-                            fontSize: 24,
+                        child: const Icon(
+                          Icons.access_time,
+                          color: Color(0xFFBA78FC),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              schedule['time'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${schedule['subject']} - ${schedule['grade']}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        schedule['room'] ?? '',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ],
+            ),
+          ),
+          
+                  const SizedBox(height: 16),
+                  
+                  // Assigned Classes Section
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Assigned Classes',
+                          style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        // Designation
+                        const SizedBox(height: 8),
                         Text(
-                          _getDesignation(),
+                          'The teacher is assigned to the following classes.',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             color: Colors.grey[600],
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        _assignedClasses.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: Text(
+                                    'No classes assigned',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _assignedClasses.map((classData) {
+                                  final className = classData['name'] ?? 
+                                      '${classData['className']} ${classData['section']}';
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFBA78FC).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(0xFFBA78FC).withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      className,
+                                      style: const TextStyle(
+                                        color: Color(0xFFBA78FC),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                       ],
                     ),
                   ),
@@ -148,7 +387,17 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                   
                   // Contact Information
                   Container(
-                    color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,113 +436,155 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                   
                   const SizedBox(height: 16),
                   
-                  // Academic Assignments
+                  // Subjects Section
                   Container(
-                    color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Academic Assignments',
+                          'Subjects',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        
-                        // Assigned Classes
-                        _buildAssignmentSection(
-                          Icons.school_outlined,
-                          'Assigned Classes',
-                          _assignedClasses.isNotEmpty
-                              ? _assignedClasses
-                                  .map((c) => c['name'] ?? '')
-                                  .join(', ')
-                              : 'No classes assigned',
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Subjects
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFBA78FC).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.menu_book_outlined,
-                                color: Color(0xFFBA78FC),
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Subjects',
+                        const SizedBox(height: 16),
+                        _subjects.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: Text(
+                                    'No subjects assigned',
                                     style: TextStyle(
-                                      color: Colors.grey[600],
+                                      color: Colors.grey,
                                       fontSize: 14,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  _subjects.isEmpty
-                                      ? const Text(
-                                          'No subjects assigned',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                          ),
-                                        )
-                                      : Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: _subjects.map((subject) {
-                                            return Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 8,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFBA78FC)
-                                                    .withOpacity(0.15),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                subject['name'] ?? '',
-                                                style: const TextStyle(
-                                                  color: Color(0xFFBA78FC),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                ],
+                                ),
+                              )
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _subjects.map((subject) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFBA78FC).withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      subject['name'] ?? '',
+                                      style: const TextStyle(
+                                        color: Color(0xFFBA78FC),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 20),
                 ],
               ),
+            );
+  }
+
+  Widget _buildAttendanceTab() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today,
+              size: 64,
+              color: Colors.grey[400],
             ),
+            const SizedBox(height: 16),
+            Text(
+              'Attendance records will be shown here',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  String _getDesignation() {
+  Widget _buildGradesTab() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.grade,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Grades and performance data will be shown here',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeesTab() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.payments,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Fee information will be shown here',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }  String _getDesignation() {
     if (_subjects.isEmpty) return 'Teacher';
     
     if (_subjects.length == 1) {
@@ -337,53 +628,6 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAssignmentSection(
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFBA78FC).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: const Color(0xFFBA78FC),
-            size: 24,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
               Text(
                 value,
                 style: const TextStyle(

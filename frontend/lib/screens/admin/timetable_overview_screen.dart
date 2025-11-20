@@ -3,7 +3,7 @@ import '../../services/api_service.dart';
 import '../../dependency_injection.dart';
 
 class TimetableOverviewScreen extends StatefulWidget {
-  const TimetableOverviewScreen({Key? key}) : super(key: key);
+  const TimetableOverviewScreen({super.key});
 
   @override
   State<TimetableOverviewScreen> createState() => _TimetableOverviewScreenState();
@@ -148,7 +148,7 @@ class _TimetableOverviewScreenState extends State<TimetableOverviewScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: selectedSection,
+                  initialValue: selectedSection,
                   decoration: const InputDecoration(
                     labelText: 'Select Section',
                     border: OutlineInputBorder(),
@@ -165,7 +165,7 @@ class _TimetableOverviewScreenState extends State<TimetableOverviewScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedSubject,
+                  initialValue: selectedSubject,
                   decoration: const InputDecoration(
                     labelText: 'Select Subject',
                     border: OutlineInputBorder(),
@@ -182,7 +182,7 @@ class _TimetableOverviewScreenState extends State<TimetableOverviewScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedTeacher,
+                  initialValue: selectedTeacher,
                   decoration: const InputDecoration(
                     labelText: 'Select Teacher',
                     border: OutlineInputBorder(),
@@ -199,7 +199,7 @@ class _TimetableOverviewScreenState extends State<TimetableOverviewScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedDay,
+                  initialValue: selectedDay,
                   decoration: const InputDecoration(
                     labelText: 'Day',
                     border: OutlineInputBorder(),
@@ -590,8 +590,8 @@ class _TimetableOverviewScreenState extends State<TimetableOverviewScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddSlotDialog,
         backgroundColor: const Color(0xFFBA78FC),
-        child: const Icon(Icons.add, color: Colors.white),
         elevation: 6,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

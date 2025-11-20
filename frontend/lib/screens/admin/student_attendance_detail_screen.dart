@@ -228,8 +228,8 @@ class _StudentAttendanceDetailScreenState
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(Icons.swap_vert,
-                              size: 20, color: const Color(0xFFBA78FC)),
+                          const Icon(Icons.swap_vert,
+                              size: 20, color: Color(0xFFBA78FC)),
                         ],
                       ),
                     ),
@@ -395,7 +395,7 @@ class _StudentAttendanceDetailScreenState
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -538,7 +538,7 @@ class _StudentAttendanceDetailScreenState
                   pw.SizedBox(height: 4),
                   pw.Text(
                     'Period: ${_formatDate(widget.startDate)} - ${_formatDate(widget.endDate)}',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 12,
                       color: PdfColors.grey700,
                     ),
@@ -628,7 +628,7 @@ class _StudentAttendanceDetailScreenState
                       _buildTableCell('${student['total']}'),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
 
@@ -686,7 +686,7 @@ class _StudentAttendanceDetailScreenState
         pw.SizedBox(height: 4),
         pw.Text(
           label,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontSize: 10,
             color: PdfColors.grey600,
           ),

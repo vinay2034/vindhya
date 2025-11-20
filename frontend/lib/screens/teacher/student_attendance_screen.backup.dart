@@ -23,7 +23,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   List<Map<String, dynamic>> _classes = [];
   List<Map<String, dynamic>> _subjects = [];
   List<Map<String, dynamic>> _students = [];
-  Map<String, String> _attendanceStatus = {}; // studentId: status
+  final Map<String, String> _attendanceStatus = {}; // studentId: status
   
   bool _isLoading = true;
   bool _isSaving = false;
@@ -115,8 +115,9 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
     int late = 0;
     
     _attendanceStatus.forEach((key, value) {
-      if (value == 'present') present++;
-      else if (value == 'absent') absent++;
+      if (value == 'present') {
+        present++;
+      } else if (value == 'absent') absent++;
       else if (value == 'late') late++;
     });
     

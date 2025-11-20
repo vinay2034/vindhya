@@ -4,7 +4,7 @@ import '../../dependency_injection.dart';
 import 'teacher_registration_screen.dart';
 
 class TeacherAssignmentsScreen extends StatefulWidget {
-  const TeacherAssignmentsScreen({Key? key}) : super(key: key);
+  const TeacherAssignmentsScreen({super.key});
 
   @override
   State<TeacherAssignmentsScreen> createState() =>
@@ -204,7 +204,7 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
                         });
                       },
                     );
-                  }).toList(),
+                  }),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
@@ -236,7 +236,7 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
                         });
                       },
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -341,8 +341,8 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
           }
         },
         backgroundColor: const Color(0xFFBA78FC),
-        child: const Icon(Icons.add, color: Colors.white),
         elevation: 6,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(

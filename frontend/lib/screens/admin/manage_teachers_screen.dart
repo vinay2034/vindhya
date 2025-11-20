@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
-import 'teacher_profile_admin_screen.dart';
+import 'teacher_profile_admin_view.dart';
 
 class ManageTeachersScreen extends StatefulWidget {
   const ManageTeachersScreen({super.key});
@@ -171,7 +171,7 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TeacherProfileAdminScreen(teacher: teacher),
+            builder: (context) => TeacherProfileAdminView(teacher: teacher),
           ),
         );
       },
@@ -194,7 +194,7 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
             // Profile Photo
             CircleAvatar(
               radius: 28,
-              backgroundColor: Color(AppColors.primary).withOpacity(0.1),
+              backgroundColor: const Color(AppColors.primary).withOpacity(0.1),
               child: teacher['photo'] != null
                   ? ClipOval(
                       child: Image.network(
@@ -203,7 +203,7 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
                         height: 56,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Icon(
+                          return const Icon(
                             Icons.person,
                             size: 28,
                             color: Color(AppColors.primary),
@@ -211,7 +211,7 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
                         },
                       ),
                     )
-                  : Icon(
+                  : const Icon(
                       Icons.person,
                       size: 28,
                       color: Color(AppColors.primary),
@@ -248,12 +248,12 @@ class _ManageTeachersScreenState extends State<ManageTeachersScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(AppColors.primary).withOpacity(0.1),
+                        color: const Color(AppColors.primary).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         teacher['profile']['designation'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(AppColors.primary),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

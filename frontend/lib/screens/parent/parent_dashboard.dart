@@ -31,8 +31,8 @@ class ParentDashboard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Color(AppColors.primary).withOpacity(0.1),
-                    child: Icon(
+                    backgroundColor: const Color(AppColors.primary).withOpacity(0.1),
+                    child: const Icon(
                       Icons.person,
                       size: 32,
                       color: Color(AppColors.primary),
@@ -94,10 +94,10 @@ class ParentDashboard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(AppColors.success).withOpacity(0.1),
+                          color: const Color(AppColors.success).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: const Text(
                           '95%',
                           style: TextStyle(
                             color: Color(AppColors.success),
@@ -153,10 +153,10 @@ class ParentDashboard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(AppColors.warning).withOpacity(0.1),
+                          color: const Color(AppColors.warning).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Due',
                           style: TextStyle(
                             color: Color(AppColors.warning),
@@ -190,7 +190,7 @@ class ParentDashboard extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(AppColors.warning),
+                      backgroundColor: const Color(AppColors.warning),
                       minimumSize: const Size(double.infinity, 48),
                     ),
                     child: const Text('Pay Now'),
@@ -326,7 +326,7 @@ class ParentDashboard extends StatelessWidget {
               Icon(
                 icon,
                 size: 32,
-                color: Color(AppColors.primary),
+                color: const Color(AppColors.primary),
               ),
               const SizedBox(height: 8),
               Text(

@@ -33,14 +33,14 @@ class MyApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(AppColors.primary),
+        primaryColor: const Color(AppColors.primary),
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Poppins',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(AppColors.primary),
-          secondary: Color(AppColors.secondary),
+          seedColor: const Color(AppColors.primary),
+          secondary: const Color(AppColors.secondary),
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           elevation: 0,
           backgroundColor: Colors.white,
           iconTheme: IconThemeData(color: Color(AppColors.dark)),
@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(AppColors.primary),
+            backgroundColor: const Color(AppColors.primary),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Color(AppColors.light),
+          fillColor: const Color(AppColors.light),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -78,11 +78,11 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(AppColors.primary), width: 2),
+            borderSide: const BorderSide(color: Color(AppColors.primary), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(AppColors.danger), width: 1),
+            borderSide: const BorderSide(color: Color(AppColors.danger), width: 1),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),

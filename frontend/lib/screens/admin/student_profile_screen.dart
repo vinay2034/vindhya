@@ -60,8 +60,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       int present = 0, absent = 0, late = 0;
       for (var record in studentAttendance) {
         final status = record['status'] as String;
-        if (status == 'present') present++;
-        else if (status == 'absent') absent++;
+        if (status == 'present') {
+          present++;
+        } else if (status == 'absent') absent++;
         else if (status == 'late') late++;
       }
 
@@ -109,7 +110,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   // Profile Avatar
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: Color(AppColors.primary),
+                    backgroundColor: const Color(AppColors.primary),
                     child: Text(
                       _getInitials(widget.student['name'] ?? 'Student'),
                       style: const TextStyle(
@@ -158,9 +159,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               child: Column(
                 children: [
                   TabBar(
-                    labelColor: Color(AppColors.primary),
+                    labelColor: const Color(AppColors.primary),
                     unselectedLabelColor: Colors.grey[600],
-                    indicatorColor: Color(AppColors.primary),
+                    indicatorColor: const Color(AppColors.primary),
                     tabs: const [
                       Tab(text: 'Details'),
                       Tab(text: 'Attendance'),
@@ -296,14 +297,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(AppColors.primary), Color(AppColors.primary).withOpacity(0.8)],
+                  colors: [const Color(AppColors.primary), const Color(AppColors.primary).withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(AppColors.primary).withOpacity(0.3),
+                    color: const Color(AppColors.primary).withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -576,9 +577,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
           if (hasActions) ...[
             const SizedBox(width: 8),
-            Icon(Icons.message_outlined, size: 18, color: Color(AppColors.primary)),
+            const Icon(Icons.message_outlined, size: 18, color: Color(AppColors.primary)),
             const SizedBox(width: 8),
-            Icon(Icons.call_outlined, size: 18, color: Color(AppColors.secondary)),
+            const Icon(Icons.call_outlined, size: 18, color: Color(AppColors.secondary)),
           ],
         ],
       ),
@@ -692,7 +693,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.grey[700],
                   indicator: BoxDecoration(
-                    color: Color(AppColors.primary),
+                    color: const Color(AppColors.primary),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   tabs: const [
@@ -739,7 +740,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             child: ElevatedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Payment gateway integration coming soon!'),
                     backgroundColor: Color(AppColors.primary),
                   ),
@@ -748,7 +749,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               icon: const Icon(Icons.payment),
               label: Text('Pay Now (₹${outstandingBalance.toStringAsFixed(2)})'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(AppColors.primary),
+                backgroundColor: const Color(AppColors.primary),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(

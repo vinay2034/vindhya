@@ -34,9 +34,9 @@ class ClassModel extends Equatable {
           ? json['classTeacher']
           : json['classTeacher']?['_id'],
       subjects: json['subjects'] is List
-          ? (json['subjects'] as List).map((s) {
+          ? List<String>.from((json['subjects'] as List).map((s) {
               return s is String ? s : s['_id'] ?? '';
-            }).toList()
+            }))
           : [],
       capacity: json['capacity'] ?? 40,
       academicYear: json['academicYear'] ?? '',

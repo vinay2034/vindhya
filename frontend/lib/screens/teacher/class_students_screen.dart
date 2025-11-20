@@ -229,7 +229,7 @@ class _ClassStudentsScreenState extends State<ClassStudentsScreen> {
         // Students Grid
         ...filteredStudents.map((student) {
           return _buildStudentCard(student);
-        }).toList(),
+        }),
       ],
     );
   }

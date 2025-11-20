@@ -38,7 +38,7 @@ class TeacherDashboard extends StatelessWidget {
         children: [
           // Welcome Card
           Card(
-            color: Color(AppColors.primary),
+            color: const Color(AppColors.primary),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -168,7 +168,7 @@ class TeacherDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(icon, color: Color(AppColors.primary), size: 32),
+            Icon(icon, color: const Color(AppColors.primary), size: 32),
             const SizedBox(height: 8),
             Text(
               value,
@@ -194,8 +194,8 @@ class TeacherDashboard extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Color(AppColors.secondary).withOpacity(0.2),
-          child: Icon(Icons.schedule, color: Color(AppColors.secondary)),
+          backgroundColor: const Color(AppColors.secondary).withOpacity(0.2),
+          child: const Icon(Icons.schedule, color: Color(AppColors.secondary)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text('$time • $room'),
@@ -214,8 +214,8 @@ class TeacherDashboard extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Color(AppColors.primary).withOpacity(0.1),
-          child: Icon(icon, color: Color(AppColors.primary)),
+          backgroundColor: const Color(AppColors.primary).withOpacity(0.1),
+          child: Icon(icon, color: const Color(AppColors.primary)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),

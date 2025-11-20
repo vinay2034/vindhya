@@ -189,7 +189,7 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> with Single
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedClassId,
+                  initialValue: selectedClassId,
                   decoration: const InputDecoration(
                     labelText: 'Class *',
                     border: OutlineInputBorder(),
@@ -238,15 +238,15 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> with Single
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedGender,
+                  initialValue: selectedGender,
                   decoration: const InputDecoration(
                     labelText: 'Gender *',
                     border: OutlineInputBorder(),
                   ),
-                  items: [
-                    const DropdownMenuItem(value: 'male', child: Text('Male')),
-                    const DropdownMenuItem(value: 'female', child: Text('Female')),
-                    const DropdownMenuItem(value: 'other', child: Text('Other')),
+                  items: const [
+                    DropdownMenuItem(value: 'male', child: Text('Male')),
+                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
                   ],
                   onChanged: (value) {
                     setDialogState(() {
@@ -256,7 +256,7 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> with Single
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedBloodGroup,
+                  initialValue: selectedBloodGroup,
                   decoration: const InputDecoration(
                     labelText: 'Blood Group (Optional)',
                     border: OutlineInputBorder(),

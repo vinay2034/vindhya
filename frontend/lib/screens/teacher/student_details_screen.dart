@@ -158,10 +158,10 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
             backgroundImage: student['avatar'] != null
                 ? NetworkImage('${ApiConfig.baseUrl.replaceAll('/api', '')}${student['avatar']}')
                 : null,
+            backgroundColor: const Color(0xFFE5B87E),
             child: student['avatar'] == null
                 ? const Icon(Icons.person, size: 40, color: Colors.white)
                 : null,
-            backgroundColor: const Color(0xFFE5B87E),
           ),
           const SizedBox(height: 12),
 
@@ -313,11 +313,11 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: ExpansionTile(
-              title: Row(
+              title: const Row(
                 children: [
-                  const Icon(Icons.bar_chart, color: Color(0xFFBA78FC)),
-                  const SizedBox(width: 12),
-                  const Text(
+                  Icon(Icons.bar_chart, color: Color(0xFFBA78FC)),
+                  SizedBox(width: 12),
+                  Text(
                     'Attendance',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
