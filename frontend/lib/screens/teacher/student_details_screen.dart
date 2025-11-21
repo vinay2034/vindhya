@@ -31,7 +31,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadStudentDetails();
   }
 
@@ -68,12 +68,6 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
   void _launchPhone(String phone) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Call: $phone')),
-    );
-  }
-
-  void _launchEmail(String email) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Email: $email')),
     );
   }
 
@@ -119,7 +113,6 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
                       tabs: const [
                         Tab(text: 'Details'),
                         Tab(text: 'Attendance'),
-                        Tab(text: 'Grades'),
                         Tab(text: 'Communication'),
                       ],
                     ),
@@ -133,7 +126,6 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
                       children: [
                         _buildDetailsTab(),
                         _buildAttendanceTab(),
-                        _buildGradesTab(),
                         _buildCommunicationTab(),
                       ],
                     ),
@@ -150,9 +142,9 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       color: Colors.white,
-      child: Column(
+      child: Row(
         children: [
-          // Profile Picture
+          // Left side - Profile Picture
           CircleAvatar(
             radius: 40,
             backgroundImage: student['avatar'] != null
@@ -163,79 +155,43 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
                 ? const Icon(Icons.person, size: 40, color: Colors.white)
                 : null,
           ),
-          const SizedBox(height: 12),
-
-          // Name
-          Text(
-            student['name'] ?? 'Student Name',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // Student ID and Grade
-          Text(
-            'Student ID: ${student['admissionNumber'] ?? 'N/A'} | Grade ${student['classId']?['grade'] ?? ''}',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Contact Parent Button
-          SizedBox(
-            width: double.infinity,
-            height: 45,
-            child: ElevatedButton(
-              onPressed: () {
-                _showContactParentDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFBA78FC),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Contact Parent',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Academic Year Selector
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: _academicYears.map((year) {
-              final isSelected = year == _selectedYear;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ChoiceChip(
-                  label: Text(year),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() => _selectedYear = year);
-                    }
-                  },
-                  selectedColor: const Color(0xFFBA78FC),
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 12,
+          const SizedBox(width: 16),
+          
+          // Right side - Student info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name
+                Text(
+                  student['name'] ?? 'Student Name',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  backgroundColor: Colors.grey[200],
                 ),
-              );
-            }).toList(),
+                const SizedBox(height: 8),
+
+                // Student ID
+                Text(
+                  'Student ID: ${student['admissionNumber'] ?? 'N/A'}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // Grade
+                Text(
+                  'Grade ${student['classId']?['grade'] ?? ''}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -251,30 +207,8 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Personal Information
-          _buildSectionTitle('Personal Information'),
-          const SizedBox(height: 12),
-          _buildInfoRow('Date of Birth', _formatDate(student['dateOfBirth'])),
           _buildInfoRow('Gender', _capitalizeFirst(student['gender'] ?? 'N/A')),
           _buildInfoRow('Address', student['address'] ?? 'N/A'),
-          const SizedBox(height: 24),
-
-          // Guardian Information
-          _buildSectionTitle('Guardian Information'),
-          const SizedBox(height: 12),
-          _buildInfoRow('Guardian', emergencyContact['fatherName'] ?? 'N/A'),
-          _buildInfoRow(
-            'Contact',
-            emergencyContact['phone'] ?? 'N/A',
-            isLink: true,
-            onTap: () => _launchPhone(emergencyContact['phone'] ?? ''),
-          ),
-          _buildInfoRow(
-            'Email',
-            student['parentId']?['email'] ?? 'N/A',
-            isLink: true,
-            onTap: () => _launchEmail(student['parentId']?['email'] ?? ''),
-          ),
           const SizedBox(height: 24),
 
           // Emergency Contact
@@ -294,108 +228,122 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
   }
 
   Widget _buildAttendanceTab() {
-    final attendance = _attendanceData ?? {};
-    final present = attendance['present'] ?? 0;
-    final absent = attendance['absent'] ?? 0;
-    final late = attendance['late'] ?? 0;
-    final total = present + absent + late;
-    final percentage = total > 0 ? ((present / total) * 100).round() : 0;
+    // Generate last 7 days
+    final List<Map<String, dynamic>> last7Days = [];
+    final now = DateTime.now();
+    
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      // Sample data - in real app, fetch from backend
+      final status = i % 3 == 0 ? 'Present' : (i % 5 == 0 ? 'Absent' : 'Present');
+      last7Days.add({
+        'date': date,
+        'status': status,
+      });
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Expandable Attendance Section
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: ExpansionTile(
-              title: const Row(
-                children: [
-                  Icon(Icons.bar_chart, color: Color(0xFFBA78FC)),
-                  SizedBox(width: 12),
-                  Text(
-                    'Attendance',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Circular Progress
-                      SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 120,
-                              height: 120,
-                              child: CircularProgressIndicator(
-                                value: percentage / 100,
-                                strokeWidth: 12,
-                                backgroundColor: Colors.grey[200],
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFFBA78FC),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '$percentage%',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFBA78FC),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Attendance Stats
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildAttendanceStat('Present', present, Colors.green),
-                          _buildAttendanceStat('Absent', absent, Colors.red),
-                          _buildAttendanceStat('Late', late, Colors.orange),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          const Text(
+            'Last 7 Days Attendance',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradesTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.grade_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
-          Text(
-            'No grades available',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+          
+          // Last 7 days attendance list
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: last7Days.length,
+            itemBuilder: (context, index) {
+              final record = last7Days[index];
+              final date = record['date'] as DateTime;
+              final status = record['status'] as String;
+              final isPresent = status == 'Present';
+              
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isPresent ? Colors.green.shade200 : Colors.red.shade200,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Date
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('EEEE').format(date),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(date),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Status
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isPresent ? Colors.green.shade50 : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isPresent ? Icons.check_circle : Icons.cancel,
+                            size: 16,
+                            color: isPresent ? Colors.green : Colors.red,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            status,
+                            style: TextStyle(
+                              color: isPresent ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -466,90 +414,8 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen>
     );
   }
 
-  Widget _buildAttendanceStat(String label, int count, Color color) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '$count $label',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'N/A';
-    try {
-      final DateTime dateTime = DateTime.parse(date.toString());
-      return DateFormat('MMMM dd, yyyy').format(dateTime);
-    } catch (e) {
-      return 'N/A';
-    }
-  }
-
   String _capitalizeFirst(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
-  }
-
-  void _showContactParentDialog() {
-    final student = _studentData ?? {};
-    final emergencyContact = student['emergencyContact'] ?? {};
-    final phone = emergencyContact['phone'] ?? '';
-    final email = student['parentId']?['email'] ?? '';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Contact Parent'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.phone, color: Color(0xFFBA78FC)),
-              title: Text(phone.isNotEmpty ? phone : 'No phone number'),
-              onTap: phone.isNotEmpty
-                  ? () {
-                      Navigator.pop(context);
-                      _launchPhone(phone);
-                    }
-                  : null,
-            ),
-            ListTile(
-              leading: const Icon(Icons.email, color: Color(0xFFBA78FC)),
-              title: Text(email.isNotEmpty ? email : 'No email'),
-              onTap: email.isNotEmpty
-                  ? () {
-                      Navigator.pop(context);
-                      _launchEmail(email);
-                    }
-                  : null,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
   }
 }

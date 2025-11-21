@@ -3,6 +3,7 @@ import '../../services/api_service.dart';
 import '../../dependency_injection.dart';
 import 'teacher_profile_screen.dart';
 import 'students_list_screen.dart';
+import 'mark_attendance_screen.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -18,7 +19,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   List<Map<String, dynamic>> _todaySchedule = [];
   List<Map<String, dynamic>> _myClasses = [];
   int _totalStudents = 0;
-  int _upcomingAssignments = 0;
+  int _todayPresent = 0;
+  int _todayAbsent = 0;
   bool _isLoading = true;
   int _currentNavIndex = 0;
 
@@ -38,6 +40,21 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       // Get teacher's classes
       final classesResponse = await _apiService.get('/teacher/classes');
       final classes = List<Map<String, dynamic>>.from(classesResponse.data['data'] ?? []);
+
+      // Calculate total students from all assigned classes
+      int totalStudents = 0;
+      for (var classData in classes) {
+        try {
+          final studentsResponse = await _apiService.get('/teacher/students/${classData['_id']}');
+          final studentsData = studentsResponse.data['data']['students'];
+          final students = List<Map<String, dynamic>>.from(
+            studentsData is List ? studentsData : []
+          );
+          totalStudents += students.length;
+        } catch (e) {
+          print('Error loading students for class ${classData['_id']}: $e');
+        }
+      }
 
       // Mock today's schedule - in real app would come from timetable API
       final schedule = [
@@ -60,16 +77,18 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           'icon': Icons.restaurant_outlined,
         },
       ];
-
-      // Calculate total students
-      int totalStudents = 124; // Mock data - would come from API
+      
+      // Mock today's attendance - in real app would fetch from attendance API
+      int todayPresent = totalStudents > 0 ? (totalStudents * 0.79).round() : 0;
+      int todayAbsent = totalStudents - todayPresent;
 
       setState(() {
         _teacherData = teacherData;
         _myClasses = classes;
         _todaySchedule = schedule;
         _totalStudents = totalStudents;
-        _upcomingAssignments = 3; // Mock data
+        _todayPresent = todayPresent;
+        _todayAbsent = todayAbsent;
         _isLoading = false;
       });
     } catch (e) {
@@ -166,13 +185,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Upcoming Assignments Card
-                            _buildStatCard(
-                              'Upcoming Assignments',
-                              _upcomingAssignments.toString(),
-                              const Color(0xFFE3F2FD),
-                              const Color(0xFF2196F3),
-                            ),
+                            // Today's Attendance Card
+                            _buildAttendanceCard(),
                             const SizedBox(height: 24),
                             
                             // My Classes Section
@@ -195,15 +209,21 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               ),
             ),
       bottomNavigationBar: _buildBottomNav(),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to mark attendance - would be implemented
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mark Attendance feature coming soon!')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MarkAttendanceScreen(),
+            ),
           );
         },
         backgroundColor: const Color(0xFFBA78FC),
-        child: const Icon(Icons.edit, color: Colors.white),
+        icon: const Icon(Icons.edit_calendar, color: Colors.white),
+        label: const Text(
+          'Mark Attendance',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -430,6 +450,95 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
+  Widget _buildAttendanceCard() {
+    final attendancePercentage = _totalStudents > 0 
+        ? ((_todayPresent / _totalStudents) * 100).toStringAsFixed(0)
+        : '0';
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Today\'s Attendance',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
+              Text(
+                '$attendancePercentage%',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4CAF50),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Present: $_todayPresent',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF44336),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Absent: $_todayAbsent',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFFF44336),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMyClassesList() {
     if (_myClasses.isEmpty) {
       return Container(
@@ -473,48 +582,80 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  className,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFBA78FC),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Grade $section',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                className,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFBA78FC),
+              // Attendance Button
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.edit_calendar, color: Colors.white, size: 20),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MarkAttendanceScreen(),
+                      ),
+                    );
+                  },
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Mark Attendance',
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Grade $section',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
+              const SizedBox(width: 8),
+              // View Students Button
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFBA78FC),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StudentsListScreen(
+                          selectedClassId: classData['_id'],
+                        ),
+                      ),
+                    );
+                  },
+                  padding: EdgeInsets.zero,
+                  tooltip: 'View Students',
                 ),
               ),
             ],
-          ),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: Color(0xFFBA78FC),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.chevron_right, color: Colors.white, size: 24),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StudentsListScreen(
-                      selectedClassId: classData['_id'],
-                    ),
-                  ),
-                );
-              },
-              padding: EdgeInsets.zero,
-            ),
           ),
         ],
       ),

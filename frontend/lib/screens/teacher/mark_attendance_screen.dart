@@ -19,7 +19,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   
   List<Map<String, dynamic>> _classes = [];
   List<Map<String, dynamic>> _students = [];
-  Map<String, String> _attendanceStatus = {}; // studentId: status
+  final Map<String, String> _attendanceStatus = {}; // studentId: status
   
   bool _isLoading = true;
   bool _isSaving = false;
@@ -113,13 +113,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         return {
           'studentId': studentId,
           'status': _attendanceStatus[studentId] ?? 'present',
+          'remarks': '',
         };
       }).toList();
 
       final requestData = {
         'classId': _selectedClassId,
         'date': _selectedDate.toIso8601String(),
-        'attendance': attendanceData,
+        'attendanceList': attendanceData,
       };
 
       await _apiService.post('/teacher/attendance/bulk', data: requestData);
@@ -157,8 +158,8 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: const Color(0xFF9C27B0),
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF9C27B0),
             ),
           ),
           child: child!,
