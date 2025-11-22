@@ -196,14 +196,29 @@ const markBulkAttendance = async (req, res) => {
     const { classId, date, attendanceList } = req.body;
     // attendanceList: [{ studentId, status, remarks }]
     
+    // Parse the date string (YYYY-MM-DD format) and create date at midnight UTC
+    const dateParts = date.split('T')[0].split('-'); // Get YYYY-MM-DD part
+    const attendanceDate = new Date(Date.UTC(
+      parseInt(dateParts[0]), 
+      parseInt(dateParts[1]) - 1, 
+      parseInt(dateParts[2]),
+      0, 0, 0, 0
+    ));
+    
+    console.log('Marking attendance for date:', attendanceDate, 'from input:', date);
+    
     const bulkOps = attendanceList.map(item => ({
       updateOne: {
-        filter: { studentId: item.studentId, date: new Date(date) },
+        filter: { 
+          studentId: item.studentId, 
+          date: attendanceDate,
+          classId: classId
+        },
         update: {
           $set: {
             classId,
             status: item.status,
-            remarks: item.remarks,
+            remarks: item.remarks || '',
             markedBy: req.user.id,
             markedAt: new Date()
           }
@@ -214,11 +229,14 @@ const markBulkAttendance = async (req, res) => {
     
     await Attendance.bulkWrite(bulkOps);
     
+    console.log('Bulk attendance marked for', attendanceList.length, 'students');
+    
     res.status(200).json({
       status: 'success',
       message: 'Bulk attendance marked successfully'
     });
   } catch (error) {
+    console.error('Error in markBulkAttendance:', error);
     res.status(500).json({
       status: 'error',
       message: 'Failed to mark bulk attendance',
@@ -391,6 +409,109 @@ const getStudentDetails = async (req, res) => {
   }
 };
 
+// @desc    Get today's attendance summary for teacher's classes
+// @route   GET /api/teacher/attendance/today
+// @access  Private/Teacher
+const getTodayAttendance = async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    
+    // Get teacher's classes
+    const classes = await Class.find({ classTeacher: teacherId });
+    const classIds = classes.map(cls => cls._id);
+    
+    // Get today's date in UTC (to match attendance save format)
+    const today = new Date();
+    const startOfDay = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999));
+    
+    console.log('Searching attendance between:', startOfDay, 'and', endOfDay);
+    
+    // Get today's attendance records
+    const attendanceRecords = await Attendance.find({
+      classId: { $in: classIds },
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    });
+    
+    console.log('Found attendance records:', attendanceRecords.length);
+    
+    // Count present and absent
+    let presentCount = 0;
+    let absentCount = 0;
+    
+    attendanceRecords.forEach(record => {
+      const status = record.status.toLowerCase();
+      if (status === 'present') {
+        presentCount++;
+      } else if (status === 'absent') {
+        absentCount++;
+      }
+    });
+    
+    // Get total students
+    const totalStudents = await Student.countDocuments({
+      classId: { $in: classIds },
+      isActive: true
+    });
+    
+    console.log('Today attendance - Present:', presentCount, 'Absent:', absentCount, 'Total:', totalStudents);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        present: presentCount,
+        absent: absentCount,
+        total: totalStudents,
+        percentage: totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0
+      }
+    });
+  } catch (error) {
+    console.error('Error in getTodayAttendance:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch today\'s attendance',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get attendance for a specific student
+// @route   GET /api/teacher/attendance/student/:studentId
+// @access  Private/Teacher
+const getStudentAttendance = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { days = 7 } = req.query; // Default to last 7 days
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+    
+    const attendance = await Attendance.find({
+      studentId,
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).sort({ date: -1 });
+    
+    res.status(200).json({
+      status: 'success',
+      data: { attendance }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch student attendance',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getDashboard,
   getAssignments,
@@ -401,6 +522,8 @@ module.exports = {
   markAttendance,
   markBulkAttendance,
   getAttendance,
+  getTodayAttendance,
+  getStudentAttendance,
   getStudentFees,
   updateFeeStatus
 };

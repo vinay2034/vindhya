@@ -25,6 +25,8 @@ router.get('/student/:id', teacherController.getStudentDetails);
 router.post('/attendance', attendanceValidation, teacherController.markAttendance);
 router.post('/attendance/bulk', teacherController.markBulkAttendance);
 router.get('/attendance', teacherController.getAttendance);
+router.get('/attendance/today', teacherController.getTodayAttendance);
+router.get('/attendance/student/:studentId', teacherController.getStudentAttendance);
 
 // Fees
 router.get('/fees/:studentId', teacherController.getStudentFees);
